@@ -4,7 +4,7 @@ YouTube / Twitch 両対応の音声認識レイヤー企画メモ。
 
 ## コンセプト
 
-YouTube Live / Twitch の配信タブ音声を取得し、音声認識・翻訳・字幕表示・ログ保存へつなぐ Chrome 拡張機能。
+YouTube Live / Twitch の配信タブ音声を取得し、音声認識・翻訳・字幕表示・ログ保存へつなぐ Chrome / Brave 両対応の Chromium 拡張機能。
 
 既存の Twitch チャット翻訳拡張とは別プロジェクトとして、チャットではなく「配信音声」を主対象にする。将来的には録音・録画も扱える共通レイヤーに育てる。
 
@@ -24,11 +24,13 @@ YouTube Live / Twitch の配信タブ音声を取得し、音声認識・翻訳�
 - Chrome
 - Brave
 
-Chromium 116 以降を前提にする。開発中はブラウザの拡張機能ページでデベロッパーモードを有効にし、`extension/` ディレクトリを「パッケージ化されていない拡張機能」として読み込む。
+Chromium 116 以降を前提にする。開発中は Chrome の `chrome://extensions/` または Brave の `brave://extensions/` でデベロッパーモードを有効にし、`extension/` ディレクトリを「パッケージ化されていない拡張機能」として読み込む。
+
+実装・検証では Chrome と Brave の両方で動作することを前提にする。Firefox 固有設定は基本的に入れず、`chrome.*` API と Chromium の Manifest V3 を基準にする。
 
 ## MVP
 
-1. Chrome 拡張として起動する
+1. Chrome / Brave 拡張として起動する
 2. 現在の YouTube / Twitch タブ音声を取得する
 3. 音声を短いチャンクに分割する
 4. 音声認識 API またはローカル認識エンジンに送る
@@ -51,11 +53,11 @@ Chromium 116 以降を前提にする。開発中はブラウザの拡張機能�
 
 ### 音声取得
 
-Chrome 拡張の tabCapture API を使い、現在タブの音声 MediaStream を取得する。
+Chromium 拡張の tabCapture API を使い、現在タブの音声 MediaStream を取得する。
 
 注意点として、tabCapture 中はタブ音声がユーザーに聞こえなくなる場合があるため、AudioContext 経由で再出力する処理を入れる。
 
-現在の実装では `extension/` を Chrome 拡張ルートとし、background service worker が `tabCapture.getMediaStreamId()` を取得して offscreen document へ渡す。offscreen document 側で `MediaRecorder` によるチャンク化と、AudioContext による再出力を担当する。
+現在の実装では `extension/` を Chromium 拡張ルートとし、background service worker が `tabCapture.getMediaStreamId()` を取得して offscreen document へ渡す。offscreen document 側で `MediaRecorder` によるチャンク化と、AudioContext による再出力を担当する。
 
 ### 録音・分割
 

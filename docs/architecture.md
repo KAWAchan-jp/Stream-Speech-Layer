@@ -1,7 +1,13 @@
 # アーキテクチャ設計メモ
 
 ## 目的
-Stream Speech Layer は、配信音声を取得して文字起こしし、結果を UI で表示・保存する Chrome 拡張の MVP を目指す。
+Stream Speech Layer は、配信音声を取得して文字起こしし、結果を UI で表示・保存する Chrome / Brave 両対応の Chromium 拡張 MVP を目指す。
+
+## ブラウザ方針
+- Chrome と Brave の両方で動作することを前提にする
+- Chromium 116 以降の Manifest V3 と `chrome.*` API を基準にする
+- Firefox 固有設定は基本的に入れない
+- `tabCapture` と `offscreen` は Chrome / Brave の両方で確認対象にする
 
 ## 参考実装
 参考にする構成として、Twitch Chat Translator の音声字幕実装を採用する。特に、以下のパターンをそのまま活かす。
