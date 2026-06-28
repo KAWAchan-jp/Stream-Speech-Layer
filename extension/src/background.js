@@ -1,9 +1,6 @@
 'use strict';
 
-const EXTENSION_PATH_PREFIX = self.location.pathname.includes('/extension/src/')
-  ? 'extension/'
-  : '';
-const OFFSCREEN_DOCUMENT_PATH = `${EXTENSION_PATH_PREFIX}src/offscreen/offscreen.html`;
+const OFFSCREEN_DOCUMENT_PATH = 'src/offscreen/offscreen.html';
 const SUPPORTED_URL_PATTERN = /^https:\/\/(www\.)?(youtube\.com|twitch\.tv)\//;
 
 let activeSession = null;
