@@ -220,7 +220,6 @@ async function translateWithDeepL(text, from, to, apiKey) {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), 8000);
   const host = apiKey.endsWith(':fx') ? 'api-free.deepl.com' : 'api.deepl.com';
-  const authKey = apiKey.replace(/:fx$/, '');
   const targetLang = normalizeDeepLTargetLanguage(to);
   const sourceLang = from === 'auto' ? '' : normalizeDeepLSourceLanguage(from);
 
@@ -231,14 +230,17 @@ async function translateWithDeepL(text, from, to, apiKey) {
     const response = await fetch(`https://${host}/v2/translate`, {
       method: 'POST',
       headers: {
-        Authorization: `DeepL-Auth-Key ${authKey}`,
+        Authorization: `DeepL-Auth-Key ${apiKey}`,
         'Content-Type': 'application/x-www-form-urlencoded'
       },
       body,
       signal: controller.signal
     });
 
-    if (!response.ok) throw new Error(`DeepL HTTP ${response.status}`);
+    if (!response.ok) {
+      const errorText = await response.text().catch(() => '');
+      throw new Error(`DeepL HTTP ${response.status}${errorText ? `: ${errorText.slice(0, 120)}` : ''}`);
+    }
     const data = await response.json();
     return data.translations?.[0]?.text || '';
   } finally {
