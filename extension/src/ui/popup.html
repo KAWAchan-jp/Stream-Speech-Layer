@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <title>Stream Speech Layer</title>
+    <style>
+      body {
+        width: 340px;
+        margin: 0;
+        padding: 12px;
+        color: #181b20;
+        font-family: Arial, sans-serif;
+      }
+
+      h1 {
+        margin: 0 0 10px;
+        font-size: 16px;
+      }
+
+      label {
+        display: block;
+        margin-top: 10px;
+        font-size: 12px;
+        font-weight: 700;
+      }
+
+      input,
+      select,
+      button {
+        box-sizing: border-box;
+        width: 100%;
+        margin-top: 6px;
+        padding: 8px;
+        font: inherit;
+      }
+
+      button {
+        border: 0;
+        border-radius: 6px;
+        background: #1565c0;
+        color: white;
+        cursor: pointer;
+        font-weight: 700;
+      }
+
+      button.secondary {
+        background: #4b5563;
+      }
+
+      #status {
+        margin-top: 8px;
+        font-weight: 700;
+      }
+
+      .hint {
+        margin-top: 6px;
+        color: #5f6875;
+        font-size: 12px;
+        line-height: 1.4;
+      }
+
+      ul {
+        max-height: 180px;
+        overflow: auto;
+        margin: 8px 0 0;
+        padding-left: 18px;
+      }
+
+      li {
+        margin-bottom: 6px;
+        line-height: 1.35;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Stream Speech Layer</h1>
+    <button id="toggle">開始する</button>
+    <div id="status">停止中</div>
+    <div id="target" class="hint"></div>
+
+    <label for="provider">認識エンジン</label>
+    <select id="provider">
+      <option value="none">未設定</option>
+      <option value="groq">Groq Whisper API</option>
+    </select>
+
+    <label for="language">音声言語</label>
+    <select id="language">
+      <option value="ja">日本語</option>
+      <option value="en">英語</option>
+      <option value="auto">自動</option>
+    </select>
+
+    <label for="groqKey">Groq API キー</label>
+    <input id="groqKey" type="password" autocomplete="off" placeholder="gsk_..." />
+    <button id="saveSettings" class="secondary">設定を保存</button>
+    <div class="hint">開始すると現在の YouTube / Twitch タブ音声だけを取得します。</div>
+
+    <h2 style="font-size:14px;margin:14px 0 0;">最近の文字起こし</h2>
+    <ul id="log"></ul>
+    <script src="popup.js"></script>
+  </body>
+</html>
