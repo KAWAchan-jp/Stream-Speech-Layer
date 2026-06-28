@@ -17,7 +17,7 @@
     "https://www.twitch.tv/*"
   ],
   "background": {
-    "service_worker": "src/background.js"
+    "service_worker": "extension/src/background.js"
   },
   "content_scripts": [
     {
@@ -26,18 +26,18 @@
         "https://www.twitch.tv/*"
       ],
       "js": [
-        "src/content.js"
+        "extension/src/content.js"
       ],
       "run_at": "document_idle"
     }
   ],
   "action": {
     "default_title": "Stream Speech Layer",
-    "default_popup": "src/ui/popup.html"
+    "default_popup": "extension/src/ui/popup.html"
   },
   "icons": {
-    "16": "icons/icon16.png",
-    "48": "icons/icon48.png",
-    "128": "icons/icon128.png"
+    "16": "extension/icons/icon16.png",
+    "48": "extension/icons/icon48.png",
+    "128": "extension/icons/icon128.png"
   }
 }
