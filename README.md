@@ -19,6 +19,13 @@ YouTube Live / Twitch の配信タブ音声を取得し、音声認識・翻訳�
 - YouTube / YouTube Live
 - Twitch
 
+## 対応ブラウザ
+
+- Chrome
+- Brave
+
+Chromium 116 以降を前提にする。開発中はブラウザの拡張機能ページでデベロッパーモードを有効にし、`extension/` ディレクトリを「パッケージ化されていない拡張機能」として読み込む。
+
 ## MVP
 
 1. Chrome 拡張として起動する

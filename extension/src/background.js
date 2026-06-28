@@ -45,11 +45,16 @@ async function hasOffscreenDocument() {
 async function ensureOffscreenDocument() {
   if (await hasOffscreenDocument()) return;
 
-  await chrome.offscreen.createDocument({
-    url: OFFSCREEN_DOCUMENT_PATH,
-    reasons: ['USER_MEDIA'],
-    justification: 'Capture the current tab audio for user-started transcription.'
-  });
+  try {
+    await chrome.offscreen.createDocument({
+      url: OFFSCREEN_DOCUMENT_PATH,
+      reasons: ['USER_MEDIA'],
+      justification: 'Capture the current tab audio for user-started transcription.'
+    });
+  } catch (error) {
+    if (/single offscreen document|already exists/i.test(error.message || '')) return;
+    throw error;
+  }
 }
 
 function getMediaStreamId(targetTabId) {
