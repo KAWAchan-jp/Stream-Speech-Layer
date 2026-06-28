@@ -7,7 +7,18 @@ const logEl = document.getElementById('log');
 const providerEl = document.getElementById('provider');
 const languageEl = document.getElementById('language');
 const groqKeyEl = document.getElementById('groqKey');
+const groqKeyStatusEl = document.getElementById('groqKeyStatus');
+const clearGroqKeyButton = document.getElementById('clearGroqKey');
 const saveSettingsButton = document.getElementById('saveSettings');
+
+function updateGroqKeyStatus(hasKey) {
+  groqKeyStatusEl.textContent = hasKey
+    ? '保存済み'
+    : '未保存';
+  groqKeyStatusEl.classList.toggle('saved', hasKey);
+  groqKeyStatusEl.classList.toggle('empty', !hasKey);
+  clearGroqKeyButton.disabled = !hasKey;
+}
 
 async function refreshState() {
   const response = await chrome.runtime.sendMessage({ type: 'getState' });
@@ -18,6 +29,7 @@ async function refreshState() {
   toggleButton.textContent = isEnabled ? '停止する' : '開始する';
   providerEl.value = response.transcriptionProvider || 'none';
   languageEl.value = response.sourceLanguage || 'ja';
+  updateGroqKeyStatus(Boolean(response.hasGroqApiKey));
 
   targetEl.textContent = response.activeTitle
     ? `対象: ${response.activeTitle}`
@@ -59,9 +71,43 @@ saveSettingsButton.addEventListener('click', async () => {
       sourceLanguage: languageEl.value,
       groqApiKey: groqKeyEl.value
     });
-    statusEl.textContent = response?.ok ? '設定を保存しました' : response?.error || '保存できませんでした';
+    if (response?.ok) {
+      groqKeyEl.value = '';
+      updateGroqKeyStatus(Boolean(response.hasGroqApiKey));
+      statusEl.textContent = response.hasGroqApiKey
+        ? '設定を保存しました'
+        : '設定を保存しました。Groq API キーは未保存です';
+    } else {
+      statusEl.textContent = response?.error || '保存できませんでした';
+    }
   } finally {
     saveSettingsButton.disabled = false;
+  }
+});
+
+clearGroqKeyButton.addEventListener('click', async () => {
+  clearGroqKeyButton.disabled = true;
+  statusEl.textContent = 'API キーを削除中...';
+
+  try {
+    const response = await chrome.runtime.sendMessage({
+      type: 'saveSettings',
+      transcriptionProvider: providerEl.value,
+      sourceLanguage: languageEl.value,
+      clearGroqApiKey: true
+    });
+    if (response?.ok) {
+      groqKeyEl.value = '';
+      updateGroqKeyStatus(false);
+      statusEl.textContent = 'Groq API キーを削除しました';
+    } else {
+      statusEl.textContent = response?.error || '削除できませんでした';
+      await refreshState();
+    }
+  } finally {
+    if (groqKeyStatusEl.classList.contains('saved')) {
+      clearGroqKeyButton.disabled = false;
+    }
   }
 });
 

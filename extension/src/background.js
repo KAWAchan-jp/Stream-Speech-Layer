@@ -207,7 +207,8 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       'activeTitle',
       'activeUrl',
       'transcriptionProvider',
-      'sourceLanguage'
+      'sourceLanguage',
+      'groqApiKey'
     ]).then((result) => {
       sendResponse({
         ok: true,
@@ -217,7 +218,8 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         activeTitle: result.activeTitle || '',
         activeUrl: result.activeUrl || '',
         transcriptionProvider: result.transcriptionProvider || 'none',
-        sourceLanguage: result.sourceLanguage || 'ja'
+        sourceLanguage: result.sourceLanguage || 'ja',
+        hasGroqApiKey: Boolean(result.groqApiKey)
       });
     });
     return true;
@@ -228,9 +230,14 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       transcriptionProvider: message.transcriptionProvider || 'none',
       sourceLanguage: message.sourceLanguage || 'ja'
     };
-    if (typeof message.groqApiKey === 'string') values.groqApiKey = message.groqApiKey.trim();
+    if (message.clearGroqApiKey) {
+      values.groqApiKey = '';
+    } else if (typeof message.groqApiKey === 'string' && message.groqApiKey.trim()) {
+      values.groqApiKey = message.groqApiKey.trim();
+    }
     storageSet(values)
-      .then(() => sendResponse({ ok: true }))
+      .then(() => storageGet(['groqApiKey']))
+      .then((result) => sendResponse({ ok: true, hasGroqApiKey: Boolean(result.groqApiKey) }))
       .catch((error) => sendResponse({ ok: false, error: error.message }));
     return true;
   }

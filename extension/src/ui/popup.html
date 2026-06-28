@@ -59,6 +59,36 @@
         line-height: 1.4;
       }
 
+      .inline-actions {
+        display: grid;
+        grid-template-columns: 1fr auto;
+        gap: 8px;
+        align-items: end;
+      }
+
+      .inline-actions input {
+        margin-top: 6px;
+      }
+
+      .inline-actions button {
+        width: auto;
+        min-width: 72px;
+      }
+
+      .key-status {
+        margin-top: 6px;
+        font-size: 12px;
+        font-weight: 700;
+      }
+
+      .key-status.saved {
+        color: #15803d;
+      }
+
+      .key-status.empty {
+        color: #9a3412;
+      }
+
       ul {
         max-height: 180px;
         overflow: auto;
@@ -92,7 +122,11 @@
     </select>
 
     <label for="groqKey">Groq API キー</label>
-    <input id="groqKey" type="password" autocomplete="off" placeholder="gsk_..." />
+    <div class="inline-actions">
+      <input id="groqKey" type="password" autocomplete="off" placeholder="新しいキーを入力" />
+      <button id="clearGroqKey" class="secondary" type="button">削除</button>
+    </div>
+    <div id="groqKeyStatus" class="key-status empty">未保存</div>
     <button id="saveSettings" class="secondary">設定を保存</button>
     <div class="hint">開始すると現在の YouTube / Twitch タブ音声だけを取得します。</div>
 
