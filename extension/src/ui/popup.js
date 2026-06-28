@@ -9,18 +9,29 @@ const languageEl = document.getElementById('language');
 const translationEnabledEl = document.getElementById('translationEnabled');
 const translationProviderEl = document.getElementById('translationProvider');
 const targetLanguageEl = document.getElementById('targetLanguage');
+const deeplKeyEl = document.getElementById('deeplKey');
+const deeplKeyStatusEl = document.getElementById('deeplKeyStatus');
+const clearDeepLKeyButton = document.getElementById('clearDeepLKey');
 const groqKeyEl = document.getElementById('groqKey');
 const groqKeyStatusEl = document.getElementById('groqKeyStatus');
 const clearGroqKeyButton = document.getElementById('clearGroqKey');
 const saveSettingsButton = document.getElementById('saveSettings');
 
-function updateGroqKeyStatus(hasKey) {
-  groqKeyStatusEl.textContent = hasKey
+function updateKeyStatus(statusEl, clearButton, hasKey) {
+  statusEl.textContent = hasKey
     ? '保存済み'
     : '未保存';
-  groqKeyStatusEl.classList.toggle('saved', hasKey);
-  groqKeyStatusEl.classList.toggle('empty', !hasKey);
-  clearGroqKeyButton.disabled = !hasKey;
+  statusEl.classList.toggle('saved', hasKey);
+  statusEl.classList.toggle('empty', !hasKey);
+  clearButton.disabled = !hasKey;
+}
+
+function updateGroqKeyStatus(hasKey) {
+  updateKeyStatus(groqKeyStatusEl, clearGroqKeyButton, hasKey);
+}
+
+function updateDeepLKeyStatus(hasKey) {
+  updateKeyStatus(deeplKeyStatusEl, clearDeepLKeyButton, hasKey);
 }
 
 async function refreshState() {
@@ -36,6 +47,7 @@ async function refreshState() {
   translationProviderEl.value = response.translationProvider || 'google';
   targetLanguageEl.value = response.targetLanguage || 'ja';
   updateGroqKeyStatus(Boolean(response.hasGroqApiKey));
+  updateDeepLKeyStatus(Boolean(response.hasDeepLApiKey));
 
   targetEl.textContent = response.activeTitle
     ? `対象: ${response.activeTitle}`
@@ -80,14 +92,15 @@ saveSettingsButton.addEventListener('click', async () => {
       translationEnabled: translationEnabledEl.checked,
       translationProvider: translationProviderEl.value,
       targetLanguage: targetLanguageEl.value,
+      deeplApiKey: deeplKeyEl.value,
       groqApiKey: groqKeyEl.value
     });
     if (response?.ok) {
       groqKeyEl.value = '';
+      deeplKeyEl.value = '';
       updateGroqKeyStatus(Boolean(response.hasGroqApiKey));
-      statusEl.textContent = response.hasGroqApiKey
-        ? '設定を保存しました'
-        : '設定を保存しました。Groq API キーは未保存です';
+      updateDeepLKeyStatus(Boolean(response.hasDeepLApiKey));
+      statusEl.textContent = '設定を保存しました';
     } else {
       statusEl.textContent = response?.error || '保存できませんでした';
     }
@@ -113,6 +126,7 @@ clearGroqKeyButton.addEventListener('click', async () => {
     if (response?.ok) {
       groqKeyEl.value = '';
       updateGroqKeyStatus(false);
+      updateDeepLKeyStatus(Boolean(response.hasDeepLApiKey));
       statusEl.textContent = 'Groq API キーを削除しました';
     } else {
       statusEl.textContent = response?.error || '削除できませんでした';
@@ -121,6 +135,36 @@ clearGroqKeyButton.addEventListener('click', async () => {
   } finally {
     if (groqKeyStatusEl.classList.contains('saved')) {
       clearGroqKeyButton.disabled = false;
+    }
+  }
+});
+
+clearDeepLKeyButton.addEventListener('click', async () => {
+  clearDeepLKeyButton.disabled = true;
+  statusEl.textContent = 'DeepL API キーを削除中...';
+
+  try {
+    const response = await chrome.runtime.sendMessage({
+      type: 'saveSettings',
+      transcriptionProvider: providerEl.value,
+      sourceLanguage: languageEl.value,
+      translationEnabled: translationEnabledEl.checked,
+      translationProvider: translationProviderEl.value,
+      targetLanguage: targetLanguageEl.value,
+      clearDeepLApiKey: true
+    });
+    if (response?.ok) {
+      deeplKeyEl.value = '';
+      updateDeepLKeyStatus(false);
+      updateGroqKeyStatus(Boolean(response.hasGroqApiKey));
+      statusEl.textContent = 'DeepL API キーを削除しました';
+    } else {
+      statusEl.textContent = response?.error || '削除できませんでした';
+      await refreshState();
+    }
+  } finally {
+    if (deeplKeyStatusEl.classList.contains('saved')) {
+      clearDeepLKeyButton.disabled = false;
     }
   }
 });

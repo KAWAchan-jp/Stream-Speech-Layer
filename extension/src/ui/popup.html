@@ -150,7 +150,15 @@
     <label for="translationProvider">翻訳エンジン</label>
     <select id="translationProvider">
       <option value="google">Google Translate</option>
+      <option value="deepl">DeepL API</option>
     </select>
+
+    <label for="deeplKey">DeepL API キー</label>
+    <div class="inline-actions">
+      <input id="deeplKey" type="password" autocomplete="off" placeholder="DeepL Free は末尾に :fx" />
+      <button id="clearDeepLKey" class="secondary" type="button">削除</button>
+    </div>
+    <div id="deeplKeyStatus" class="key-status empty">未保存</div>
 
     <label for="groqKey">Groq API キー</label>
     <div class="inline-actions">

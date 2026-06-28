@@ -82,7 +82,7 @@ MediaRecorder を使って音声チャンクを生成する。
 
 ### 翻訳
 
-既存の Twitch Chat Translator の翻訳処理を軽量移植し、まずは Google Translate 経由で音声認識後のテキストを翻訳する。popup で翻訳の有効/無効、翻訳先言語、翻訳エンジンを設定できる。
+既存の Twitch Chat Translator の翻訳処理を軽量移植し、Google Translate または DeepL API 経由で音声認識後のテキストを翻訳する。popup で翻訳の有効/無効、翻訳先言語、翻訳エンジンを設定できる。
 
 ### 表示
 

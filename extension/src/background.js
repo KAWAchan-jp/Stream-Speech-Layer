@@ -163,7 +163,8 @@ async function translateTranscriptIfNeeded(text) {
     'translationEnabled',
     'translationProvider',
     'sourceLanguage',
-    'targetLanguage'
+    'targetLanguage',
+    'deeplApiKey'
   ]);
 
   if (!settings.translationEnabled) return '';
@@ -180,6 +181,9 @@ async function translateTranscriptIfNeeded(text) {
   let translatedText = '';
   if (provider === 'google') {
     translatedText = await translateWithGoogle(text, from, to);
+  } else if (provider === 'deepl') {
+    if (!settings.deeplApiKey) throw new Error('DeepL API キーが未設定です');
+    translatedText = await translateWithDeepL(text, from, to, settings.deeplApiKey);
   }
 
   if (translationCache.size >= TRANSLATION_CACHE_MAX) {
@@ -210,6 +214,50 @@ async function translateWithGoogle(text, from, to) {
 function normalizeGoogleLanguage(language) {
   if (!language || language === 'auto') return 'auto';
   return language;
+}
+
+async function translateWithDeepL(text, from, to, apiKey) {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 8000);
+  const host = apiKey.endsWith(':fx') ? 'api-free.deepl.com' : 'api.deepl.com';
+  const authKey = apiKey.replace(/:fx$/, '');
+  const targetLang = normalizeDeepLTargetLanguage(to);
+  const sourceLang = from === 'auto' ? '' : normalizeDeepLSourceLanguage(from);
+
+  try {
+    const body = new URLSearchParams({ text, target_lang: targetLang });
+    if (sourceLang) body.append('source_lang', sourceLang);
+
+    const response = await fetch(`https://${host}/v2/translate`, {
+      method: 'POST',
+      headers: {
+        Authorization: `DeepL-Auth-Key ${authKey}`,
+        'Content-Type': 'application/x-www-form-urlencoded'
+      },
+      body,
+      signal: controller.signal
+    });
+
+    if (!response.ok) throw new Error(`DeepL HTTP ${response.status}`);
+    const data = await response.json();
+    return data.translations?.[0]?.text || '';
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+function normalizeDeepLSourceLanguage(language) {
+  const map = {
+    en: 'EN',
+    ja: 'JA',
+    ko: 'KO'
+  };
+  return map[language] || language.toUpperCase().replace('-', '_');
+}
+
+function normalizeDeepLTargetLanguage(language) {
+  if (language === 'en') return 'EN-US';
+  return normalizeDeepLSourceLanguage(language);
 }
 
 chrome.runtime.onInstalled.addListener(async () => {
@@ -284,7 +332,8 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       'groqApiKey',
       'translationEnabled',
       'translationProvider',
-      'targetLanguage'
+      'targetLanguage',
+      'deeplApiKey'
     ]).then((result) => {
       sendResponse({
         ok: true,
@@ -299,7 +348,8 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         hasGroqApiKey: Boolean(result.groqApiKey),
         translationEnabled: Boolean(result.translationEnabled),
         translationProvider: result.translationProvider || 'google',
-        targetLanguage: result.targetLanguage || 'ja'
+        targetLanguage: result.targetLanguage || 'ja',
+        hasDeepLApiKey: Boolean(result.deeplApiKey)
       });
     });
     return true;
@@ -318,9 +368,18 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     } else if (typeof message.groqApiKey === 'string' && message.groqApiKey.trim()) {
       values.groqApiKey = message.groqApiKey.trim();
     }
+    if (message.clearDeepLApiKey) {
+      values.deeplApiKey = '';
+    } else if (typeof message.deeplApiKey === 'string' && message.deeplApiKey.trim()) {
+      values.deeplApiKey = message.deeplApiKey.trim();
+    }
     storageSet(values)
-      .then(() => storageGet(['groqApiKey']))
-      .then((result) => sendResponse({ ok: true, hasGroqApiKey: Boolean(result.groqApiKey) }))
+      .then(() => storageGet(['groqApiKey', 'deeplApiKey']))
+      .then((result) => sendResponse({
+        ok: true,
+        hasGroqApiKey: Boolean(result.groqApiKey),
+        hasDeepLApiKey: Boolean(result.deeplApiKey)
+      }))
       .catch((error) => sendResponse({ ok: false, error: error.message }));
     return true;
   }
