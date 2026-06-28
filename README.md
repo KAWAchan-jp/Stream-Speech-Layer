@@ -28,6 +28,8 @@ Chromium 116 以降を前提にする。開発中は Chrome の `chrome://extens
 
 実装・検証では Chrome と Brave の両方で動作することを前提にする。Firefox 固有設定は基本的に入れず、`chrome.*` API と Chromium の Manifest V3 を基準にする。
 
+拡張の再読み込みが必要な実装・UI・manifest 変更を行う場合は、読み込まれている版を判別しやすくするため、必ず `extension/manifest.json` の `version` を上げる。
+
 ## MVP
 
 1. Chrome / Brave 拡張として起動する
