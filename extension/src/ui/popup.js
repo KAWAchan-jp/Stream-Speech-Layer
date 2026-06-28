@@ -6,6 +6,9 @@ const targetEl = document.getElementById('target');
 const logEl = document.getElementById('log');
 const providerEl = document.getElementById('provider');
 const languageEl = document.getElementById('language');
+const translationEnabledEl = document.getElementById('translationEnabled');
+const translationProviderEl = document.getElementById('translationProvider');
+const targetLanguageEl = document.getElementById('targetLanguage');
 const groqKeyEl = document.getElementById('groqKey');
 const groqKeyStatusEl = document.getElementById('groqKeyStatus');
 const clearGroqKeyButton = document.getElementById('clearGroqKey');
@@ -29,6 +32,9 @@ async function refreshState() {
   toggleButton.textContent = isEnabled ? '停止する' : '開始する';
   providerEl.value = response.transcriptionProvider || 'none';
   languageEl.value = response.sourceLanguage || 'ja';
+  translationEnabledEl.checked = Boolean(response.translationEnabled);
+  translationProviderEl.value = response.translationProvider || 'google';
+  targetLanguageEl.value = response.targetLanguage || 'ja';
   updateGroqKeyStatus(Boolean(response.hasGroqApiKey));
 
   targetEl.textContent = response.activeTitle
@@ -39,7 +45,9 @@ async function refreshState() {
   const logs = response.transcriptLog || [];
   logs.slice().reverse().forEach((entry) => {
     const item = document.createElement('li');
-    item.textContent = entry.text;
+    item.textContent = entry.translatedText
+      ? `${entry.text} → ${entry.translatedText}`
+      : entry.text;
     logEl.appendChild(item);
   });
 }
@@ -69,6 +77,9 @@ saveSettingsButton.addEventListener('click', async () => {
       type: 'saveSettings',
       transcriptionProvider: providerEl.value,
       sourceLanguage: languageEl.value,
+      translationEnabled: translationEnabledEl.checked,
+      translationProvider: translationProviderEl.value,
+      targetLanguage: targetLanguageEl.value,
       groqApiKey: groqKeyEl.value
     });
     if (response?.ok) {
@@ -94,6 +105,9 @@ clearGroqKeyButton.addEventListener('click', async () => {
       type: 'saveSettings',
       transcriptionProvider: providerEl.value,
       sourceLanguage: languageEl.value,
+      translationEnabled: translationEnabledEl.checked,
+      translationProvider: translationProviderEl.value,
+      targetLanguage: targetLanguageEl.value,
       clearGroqApiKey: true
     });
     if (response?.ok) {

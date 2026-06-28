@@ -3,6 +3,7 @@
 let overlay = null;
 let textNode = null;
 let lastTranscriptNode = null;
+let translationNode = null;
 let dragHandle = null;
 let dragState = null;
 
@@ -148,6 +149,16 @@ function createOverlay() {
   ].join(';');
   overlay.appendChild(lastTranscriptNode);
 
+  translationNode = document.createElement('div');
+  translationNode.style.cssText = [
+    'margin-top:6px',
+    'font-size:17px',
+    'font-weight:800',
+    'word-break:break-word',
+    'user-select:text'
+  ].join(';');
+  overlay.appendChild(translationNode);
+
   document.body.appendChild(overlay);
   applyOverlayPosition();
   restoreOverlayPosition().catch(() => {});
@@ -160,6 +171,7 @@ function removeOverlay() {
   overlay = null;
   textNode = null;
   lastTranscriptNode = null;
+  translationNode = null;
   dragHandle = null;
   dragState = null;
 }
@@ -169,9 +181,10 @@ function setStatus(text) {
   if (textNode) textNode.textContent = text || '';
 }
 
-function setTranscript(text) {
+function setTranscript(text, translatedText = '') {
   createOverlay();
   if (lastTranscriptNode) lastTranscriptNode.textContent = text || '';
+  if (translationNode) translationNode.textContent = translatedText || '';
 }
 
 function applyEnabledState(enabled) {
@@ -184,16 +197,18 @@ function applyEnabledState(enabled) {
 }
 
 async function syncState() {
-  const state = await chrome.storage.local.get(['isEnabled', 'lastTranscript']);
+  const state = await chrome.storage.local.get(['isEnabled', 'lastTranscript', 'lastTranslation']);
   applyEnabledState(Boolean(state.isEnabled));
-  if (state.isEnabled && state.lastTranscript) setTranscript(state.lastTranscript);
+  if (state.isEnabled && state.lastTranscript) setTranscript(state.lastTranscript, state.lastTranslation);
 }
 
 chrome.storage.onChanged.addListener((changes, areaName) => {
   if (areaName !== 'local') return;
   if ('isEnabled' in changes) applyEnabledState(Boolean(changes.isEnabled.newValue));
   if ('lastTranscript' in changes && changes.lastTranscript.newValue) {
-    setTranscript(changes.lastTranscript.newValue);
+    chrome.storage.local.get(['lastTranslation']).then((state) => {
+      setTranscript(changes.lastTranscript.newValue, state.lastTranslation);
+    });
   }
   if ('subtitleOverlayPosition' in changes && overlay) {
     applyOverlayPosition(changes.subtitleOverlayPosition.newValue);
@@ -216,7 +231,7 @@ chrome.runtime.onMessage.addListener((message) => {
   }
 
   if (message.type === 'transcript-update') {
-    setTranscript(message.text || '');
+    setTranscript(message.text || '', message.translatedText || '');
   }
 });
 

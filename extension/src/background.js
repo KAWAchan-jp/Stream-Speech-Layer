@@ -2,8 +2,10 @@
 
 const OFFSCREEN_DOCUMENT_PATH = 'src/offscreen/offscreen.html';
 const SUPPORTED_URL_PATTERN = /^https:\/\/(www\.)?(youtube\.com|twitch\.tv)\//;
+const TRANSLATION_CACHE_MAX = 300;
 
 let activeSession = null;
+const translationCache = new Map();
 
 function updateBadge(enabled) {
   chrome.action.setBadgeText({ text: enabled ? 'ON' : '' });
@@ -134,30 +136,103 @@ async function stopCapture() {
 
 async function appendTranscript(text, meta = {}) {
   const result = await storageGet(['transcriptLog']);
+  const translatedText = await translateTranscriptIfNeeded(text).catch((error) => {
+    if (activeSession?.tabId) {
+      sendToTab(activeSession.tabId, { type: 'stream-status', text: `翻訳エラー: ${error.message}` });
+    }
+    return '';
+  });
   const log = Array.isArray(result.transcriptLog) ? result.transcriptLog : [];
   const entry = {
     text,
+    translatedText,
     source: meta.source || activeSession?.title || '',
     url: meta.url || activeSession?.url || '',
     timestamp: new Date().toISOString()
   };
   const nextLog = [...log, entry].slice(-50);
-  await storageSet({ transcriptLog: nextLog, lastTranscript: text });
-  if (activeSession?.tabId) sendToTab(activeSession.tabId, { type: 'transcript-update', text });
+  await storageSet({ transcriptLog: nextLog, lastTranscript: text, lastTranslation: translatedText });
+  if (activeSession?.tabId) sendToTab(activeSession.tabId, { type: 'transcript-update', text, translatedText });
   return { entry, count: nextLog.length };
 }
 
-chrome.runtime.onInstalled.addListener(() => {
-  chrome.storage.local.set({
+async function translateTranscriptIfNeeded(text) {
+  if (!text?.trim()) return '';
+
+  const settings = await storageGet([
+    'translationEnabled',
+    'translationProvider',
+    'sourceLanguage',
+    'targetLanguage'
+  ]);
+
+  if (!settings.translationEnabled) return '';
+
+  const provider = settings.translationProvider || 'google';
+  const from = settings.sourceLanguage || 'auto';
+  const to = settings.targetLanguage || 'ja';
+
+  if (from !== 'auto' && from === to) return '';
+
+  const cacheKey = `${provider}:${from}:${to}:${text}`;
+  if (translationCache.has(cacheKey)) return translationCache.get(cacheKey);
+
+  let translatedText = '';
+  if (provider === 'google') {
+    translatedText = await translateWithGoogle(text, from, to);
+  }
+
+  if (translationCache.size >= TRANSLATION_CACHE_MAX) {
+    translationCache.delete(translationCache.keys().next().value);
+  }
+  translationCache.set(cacheKey, translatedText);
+  return translatedText;
+}
+
+async function translateWithGoogle(text, from, to) {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 8000);
+  try {
+    const sourceLang = normalizeGoogleLanguage(from);
+    const targetLang = normalizeGoogleLanguage(to);
+    const url = 'https://translate.googleapis.com/translate_a/single'
+      + `?client=gtx&sl=${encodeURIComponent(sourceLang)}`
+      + `&tl=${encodeURIComponent(targetLang)}&dt=t&q=${encodeURIComponent(text)}`;
+    const response = await fetch(url, { signal: controller.signal });
+    if (!response.ok) throw new Error(`Google Translate HTTP ${response.status}`);
+    const data = await response.json();
+    return (data[0] || []).map((item) => item?.[0]).filter(Boolean).join('') || '';
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+function normalizeGoogleLanguage(language) {
+  if (!language || language === 'auto') return 'auto';
+  return language;
+}
+
+chrome.runtime.onInstalled.addListener(async () => {
+  const defaults = {
     isEnabled: false,
     transcriptLog: [],
     lastTranscript: '',
+    lastTranslation: '',
     transcriptionProvider: 'none',
     sourceLanguage: 'ja',
+    translationEnabled: false,
+    translationProvider: 'google',
+    targetLanguage: 'ja',
     chunkMillis: 5000,
     vadThreshold: 10,
     silenceMillis: 700
-  });
+  };
+  const stored = await storageGet(Object.keys(defaults));
+  const nextValues = {};
+  for (const [key, value] of Object.entries(defaults)) {
+    if (stored[key] === undefined) nextValues[key] = value;
+  }
+  if (Object.keys(nextValues).length > 0) await storageSet(nextValues);
   updateBadge(false);
 });
 
@@ -201,22 +276,30 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       'isEnabled',
       'transcriptLog',
       'lastTranscript',
+      'lastTranslation',
       'activeTitle',
       'activeUrl',
       'transcriptionProvider',
       'sourceLanguage',
-      'groqApiKey'
+      'groqApiKey',
+      'translationEnabled',
+      'translationProvider',
+      'targetLanguage'
     ]).then((result) => {
       sendResponse({
         ok: true,
         enabled: Boolean(result.isEnabled),
         transcriptLog: Array.isArray(result.transcriptLog) ? result.transcriptLog : [],
         lastTranscript: result.lastTranscript || '',
+        lastTranslation: result.lastTranslation || '',
         activeTitle: result.activeTitle || '',
         activeUrl: result.activeUrl || '',
         transcriptionProvider: result.transcriptionProvider || 'none',
         sourceLanguage: result.sourceLanguage || 'ja',
-        hasGroqApiKey: Boolean(result.groqApiKey)
+        hasGroqApiKey: Boolean(result.groqApiKey),
+        translationEnabled: Boolean(result.translationEnabled),
+        translationProvider: result.translationProvider || 'google',
+        targetLanguage: result.targetLanguage || 'ja'
       });
     });
     return true;
@@ -225,7 +308,10 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message.type === 'saveSettings') {
     const values = {
       transcriptionProvider: message.transcriptionProvider || 'none',
-      sourceLanguage: message.sourceLanguage || 'ja'
+      sourceLanguage: message.sourceLanguage || 'ja',
+      translationEnabled: Boolean(message.translationEnabled),
+      translationProvider: message.translationProvider || 'google',
+      targetLanguage: message.targetLanguage || 'ja'
     };
     if (message.clearGroqApiKey) {
       values.groqApiKey = '';
