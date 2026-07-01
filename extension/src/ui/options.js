@@ -12,7 +12,8 @@ const clearDeepLKeyButton = document.getElementById('clearDeepLKey');
 const groqKeyEl = document.getElementById('groqKey');
 const groqKeyStatusEl = document.getElementById('groqKeyStatus');
 const clearGroqKeyButton = document.getElementById('clearGroqKey');
-const saveSettingsButton = document.getElementById('saveSettings');
+const saveGroqKeyButton = document.getElementById('saveGroqKey');
+const saveDeepLKeyButton = document.getElementById('saveDeepLKey');
 
 const resetStyleButton = document.getElementById('resetStyle');
 const backgroundOpacityValueEl = document.getElementById('backgroundOpacityValue');
@@ -137,27 +138,74 @@ function collectSettings(extra = {}) {
   };
 }
 
-saveSettingsButton.addEventListener('click', async () => {
-  saveSettingsButton.disabled = true;
-  statusEl.textContent = '設定を保存中...';
+// 選択項目の変更時に、現在のフォーム値をまとめて保存する（キーは含めない）
+async function saveCoreSettings(savedLabel) {
+  const response = await chrome.runtime.sendMessage(collectSettings());
+  if (response?.ok) {
+    updateGroqKeyStatus(Boolean(response.hasGroqApiKey));
+    updateDeepLKeyStatus(Boolean(response.hasDeepLApiKey));
+    statusEl.textContent = `${savedLabel}を保存しました`;
+  } else {
+    statusEl.textContent = response?.error || '保存できませんでした';
+  }
+}
+
+// 各セレクト・チェックボックスは変更時に自動保存する
+[
+  [providerEl, '認識エンジン'],
+  [languageEl, '配信音声の言語'],
+  [translationEnabledEl, '翻訳の有効/無効'],
+  [translationProviderEl, '翻訳エンジン'],
+  [targetLanguageEl, '翻訳先言語']
+].forEach(([el, label]) => {
+  el.addEventListener('change', () => {
+    saveCoreSettings(label).catch((error) => {
+      statusEl.textContent = error.message;
+    });
+  });
+});
+
+async function saveApiKey({ button, input, keyField, label }) {
+  const value = input.value.trim();
+  if (!value) {
+    statusEl.textContent = `${label}を入力してください`;
+    return;
+  }
+
+  button.disabled = true;
+  statusEl.textContent = `${label}を保存中...`;
 
   try {
-    const response = await chrome.runtime.sendMessage(collectSettings({
-      deeplApiKey: deeplKeyEl.value,
-      groqApiKey: groqKeyEl.value
-    }));
+    const response = await chrome.runtime.sendMessage(collectSettings({ [keyField]: value }));
     if (response?.ok) {
-      groqKeyEl.value = '';
-      deeplKeyEl.value = '';
+      input.value = '';
       updateGroqKeyStatus(Boolean(response.hasGroqApiKey));
       updateDeepLKeyStatus(Boolean(response.hasDeepLApiKey));
-      statusEl.textContent = '設定を保存しました';
+      statusEl.textContent = `${label}を保存しました`;
     } else {
       statusEl.textContent = response?.error || '保存できませんでした';
     }
   } finally {
-    saveSettingsButton.disabled = false;
+    button.disabled = false;
   }
+}
+
+saveGroqKeyButton.addEventListener('click', () => {
+  saveApiKey({
+    button: saveGroqKeyButton,
+    input: groqKeyEl,
+    keyField: 'groqApiKey',
+    label: 'Groq API キー'
+  });
+});
+
+saveDeepLKeyButton.addEventListener('click', () => {
+  saveApiKey({
+    button: saveDeepLKeyButton,
+    input: deeplKeyEl,
+    keyField: 'deeplApiKey',
+    label: 'DeepL API キー'
+  });
 });
 
 clearGroqKeyButton.addEventListener('click', async () => {

@@ -92,7 +92,7 @@
 
       .inline-actions {
         display: grid;
-        grid-template-columns: 1fr auto;
+        grid-template-columns: 1fr auto auto;
         gap: 8px;
         align-items: end;
       }
@@ -254,6 +254,8 @@
       </ul>
     </div>
 
+    <p class="subtitle">選択項目は変更するとすぐに保存されます。API キーは入力後に「保存」を押してください。</p>
+
     <div class="card">
       <h2>音声認識</h2>
       <label for="provider">認識エンジン</label>
@@ -272,6 +274,7 @@
       <label for="groqKey">Groq API キー</label>
       <div class="inline-actions">
         <input id="groqKey" type="password" autocomplete="off" placeholder="新しいキーを入力" />
+        <button id="saveGroqKey" type="button">保存</button>
         <button id="clearGroqKey" class="secondary" type="button">削除</button>
       </div>
       <div id="groqKeyStatus" class="key-status empty">未保存</div>
@@ -304,6 +307,7 @@
       <label for="deeplKey">DeepL API キー</label>
       <div class="inline-actions">
         <input id="deeplKey" type="password" autocomplete="off" placeholder="DeepL Free は末尾に :fx" />
+        <button id="saveDeepLKey" type="button">保存</button>
         <button id="clearDeepLKey" class="secondary" type="button">削除</button>
       </div>
       <div id="deeplKeyStatus" class="key-status empty">未保存</div>
@@ -368,7 +372,6 @@
     </div>
 
     <div class="footer">
-      <button id="saveSettings">設定を保存</button>
       <div id="status"></div>
     </div>
 
