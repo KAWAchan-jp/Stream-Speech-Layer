@@ -184,11 +184,58 @@
         font-weight: 700;
         font-size: 13px;
       }
+
+      .recommend {
+        margin-top: 16px;
+        padding: 14px 16px;
+        border: 1px solid #cfe3ff;
+        border-radius: 10px;
+        background: #f2f8ff;
+        font-size: 13px;
+        line-height: 1.6;
+      }
+
+      .recommend h2 {
+        margin: 0 0 6px;
+        font-size: 14px;
+        color: #1565c0;
+      }
+
+      .recommend ul {
+        margin: 6px 0 0;
+        padding-left: 18px;
+      }
+
+      .recommend li {
+        margin-bottom: 6px;
+      }
+
+      .recommend .note {
+        color: #9a3412;
+        font-weight: 700;
+      }
     </style>
   </head>
   <body>
     <h1>Stream Speech Layer 設定</h1>
     <p class="subtitle">認識・翻訳の設定と API キーを管理します。</p>
+
+    <div class="recommend">
+      <h2>おすすめ: Groq（音声認識）+ DeepL（翻訳）</h2>
+      <p>どちらも無料枠だけで日常的に使えます。API キーを取得すれば追加費用なしで始められます。</p>
+      <ul>
+        <li>
+          <strong>Groq（音声認識）</strong>: 無料枠でも配信内容にもよりますが 1 日あたり
+          おおよそ 1〜2 時間ぶんの文字起こしに使えます（目安: 1 日 2,000 リクエスト /
+          1 時間あたり音声 7,200 秒）。上限は<strong>翌日リセット</strong>されます。
+        </li>
+        <li>
+          <strong>DeepL（翻訳）</strong>: 無料枠（DeepL API Free）は<strong>月 50 万文字</strong>まで
+          翻訳できます。字幕は 1 文が短いため通常は十分な量です。
+          <span class="note">※こちらは日次ではなく毎月リセットです。</span>
+        </li>
+      </ul>
+    </div>
 
     <div class="card">
       <h2>音声認識</h2>
@@ -211,6 +258,10 @@
         <button id="clearGroqKey" class="secondary" type="button">削除</button>
       </div>
       <div id="groqKeyStatus" class="key-status empty">未保存</div>
+      <p class="hint">
+        キーの取得:
+        <a href="https://console.groq.com/keys" target="_blank" rel="noopener">console.groq.com/keys</a>
+      </p>
     </div>
 
     <div class="card">
@@ -239,6 +290,13 @@
         <button id="clearDeepLKey" class="secondary" type="button">削除</button>
       </div>
       <div id="deeplKeyStatus" class="key-status empty">未保存</div>
+      <p class="hint">
+        キーの取得:
+        <a href="https://www.deepl.com/pro-api" target="_blank" rel="noopener">deepl.com/pro-api</a>
+        （登録後
+        <a href="https://www.deepl.com/your-account/keys" target="_blank" rel="noopener">アカウント設定</a>
+        でキーを確認）
+      </p>
     </div>
 
     <div class="card">
