@@ -6,6 +6,7 @@ let lastTranscriptNode = null;
 let translationNode = null;
 let dragHandle = null;
 let dragState = null;
+let isEnabled = false;
 
 const DEFAULT_OVERLAY_OFFSET = 16;
 
@@ -177,18 +178,21 @@ function removeOverlay() {
 }
 
 function setStatus(text) {
+  if (!isEnabled) return;
   createOverlay();
   if (textNode) textNode.textContent = text || '';
 }
 
 function setTranscript(text, translatedText = '') {
+  if (!isEnabled) return;
   createOverlay();
   if (lastTranscriptNode) lastTranscriptNode.textContent = text || '';
   if (translationNode) translationNode.textContent = translatedText || '';
 }
 
 function applyEnabledState(enabled) {
-  if (enabled) {
+  isEnabled = Boolean(enabled);
+  if (isEnabled) {
     createOverlay();
     setStatus('タブ音声を取得中...');
   } else {
