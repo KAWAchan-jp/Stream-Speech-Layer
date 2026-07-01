@@ -1,5 +1,7 @@
 # Stream Speech Layer
 
+**日本語** | [English](README.en.md)
+
 > 配信の「声」を、その場で字幕に。
 
 YouTube / Twitch の配信タブ音声をリアルタイムに文字起こし・翻訳し、配信画面へそのまま字幕を重ねて表示する Chrome / Brave 向け Chromium 拡張です。ログ保存にも対応し、あとから見返せます。
