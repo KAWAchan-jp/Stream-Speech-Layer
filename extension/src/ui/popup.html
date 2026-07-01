@@ -64,6 +64,54 @@
         line-height: 1.4;
       }
 
+      .timer {
+        margin-top: 10px;
+        padding: 10px;
+        border: 1px solid #e2e5ea;
+        border-radius: 8px;
+        background: #fafbfc;
+      }
+
+      .timer-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        font-size: 13px;
+        font-weight: 700;
+      }
+
+      .timer-switch {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        cursor: pointer;
+      }
+
+      .timer-switch input {
+        width: auto;
+        margin: 0;
+      }
+
+      #timerValue {
+        color: #1565c0;
+        font-variant-numeric: tabular-nums;
+      }
+
+      #timerSlider {
+        width: 100%;
+        margin-top: 8px;
+        padding: 0;
+        cursor: pointer;
+      }
+
+      .timer-count {
+        margin-top: 8px;
+        font-size: 13px;
+        font-weight: 700;
+        color: #9a3412;
+        font-variant-numeric: tabular-nums;
+      }
+
       h2 {
         font-size: 14px;
         margin: 14px 0 0;
@@ -89,6 +137,19 @@
     </div>
     <button id="toggle">開始する</button>
     <div id="status">停止中</div>
+
+    <div id="timer" class="timer disabled">
+      <div class="timer-head">
+        <label class="timer-switch" for="timerEnabled">
+          <input id="timerEnabled" type="checkbox" />
+          ⏰ 自動停止タイマー
+        </label>
+        <span id="timerValue">10分</span>
+      </div>
+      <input id="timerSlider" type="range" min="1" max="60" step="1" value="10" />
+      <div id="timerCountdown" class="timer-count" hidden></div>
+    </div>
+
     <div id="target" class="hint"></div>
     <div class="hint">開始すると現在の YouTube / Twitch タブ音声だけを取得します。設定は⚙から変更できます。</div>
 

@@ -3,13 +3,51 @@
 const OFFSCREEN_DOCUMENT_PATH = 'src/offscreen/offscreen.html';
 const SUPPORTED_URL_PATTERN = /^https:\/\/(www\.)?(youtube\.com|twitch\.tv)\//;
 const TRANSLATION_CACHE_MAX = 300;
+const AUTO_STOP_ALARM = 'auto-stop';
+const AUTO_STOP_TICK = 'auto-stop-tick';
+const AUTO_STOP_FINAL = 'auto-stop-final';
+const FINAL_COUNTDOWN_MS = 10000;
 
 let activeSession = null;
+let finalCountdownTimer = null;
 const translationCache = new Map();
 
-function updateBadge(enabled) {
-  chrome.action.setBadgeText({ text: enabled ? 'ON' : '' });
-  chrome.action.setBadgeBackgroundColor({ color: enabled ? '#4caf50' : '#888888' });
+// タイマー稼働中は残り分、それ以外は起動状態に応じてバッジを更新する
+async function refreshBadge() {
+  // 最後の秒読み中は秒表示を優先する
+  if (finalCountdownTimer) return;
+  const { isEnabled, autoStopAt } = await storageGet(['isEnabled', 'autoStopAt']);
+  if (autoStopAt && autoStopAt > Date.now()) {
+    const minutes = Math.ceil((autoStopAt - Date.now()) / 60000);
+    chrome.action.setBadgeText({ text: String(minutes) });
+    chrome.action.setBadgeBackgroundColor({ color: '#f59e0b' });
+    return;
+  }
+  chrome.action.setBadgeText({ text: isEnabled ? 'ON' : '' });
+  chrome.action.setBadgeBackgroundColor({ color: isEnabled ? '#4caf50' : '#888888' });
+}
+
+// 停止直前の数秒だけ、バッジへ秒を赤で表示する（ベストエフォート）
+function startFinalCountdown(autoStopAt) {
+  stopFinalCountdown();
+  chrome.action.setBadgeBackgroundColor({ color: '#e53935' });
+  const tick = () => {
+    const remaining = autoStopAt - Date.now();
+    if (remaining <= 0) {
+      stopFinalCountdown();
+      return;
+    }
+    chrome.action.setBadgeText({ text: String(Math.ceil(remaining / 1000)) });
+  };
+  tick();
+  finalCountdownTimer = setInterval(tick, 1000);
+}
+
+function stopFinalCountdown() {
+  if (finalCountdownTimer) {
+    clearInterval(finalCountdownTimer);
+    finalCountdownTimer = null;
+  }
 }
 
 function storageGet(keys) {
@@ -113,7 +151,12 @@ async function startCapture(tab) {
     activeUrl: tab.url,
     activeTitle: tab.title || ''
   });
-  updateBadge(true);
+  // タイマーが予約済みなら、開始と同時にカウントダウンを始める
+  const { autoStopEnabled, autoStopMinutes } = await storageGet(['autoStopEnabled', 'autoStopMinutes']);
+  if (autoStopEnabled) {
+    await startAutoStopCountdown(autoStopMinutes);
+  }
+  await refreshBadge();
   await broadcastSessionState(true, 'タブ音声を取得中...');
   return activeSession;
 }
@@ -129,10 +172,87 @@ async function stopCapture() {
   }
 
   activeSession = null;
+  await clearAutoStopCountdown();
   await storageSet({ isEnabled: false, activeTabId: null, activeUrl: '', activeTitle: '' });
-  updateBadge(false);
+  await refreshBadge();
   if (tabId) sendToTab(tabId, { type: 'state-changed', enabled: false });
 }
+
+function clampMinutes(minutes) {
+  return Math.min(Math.max(Math.round(Number(minutes) || 0), 1), 60);
+}
+
+// カウントダウン開始: 指定分後に alarm を発火させ、完全停止する
+// バッジへ残り分を出すため 1分周期の tick、秒読み用に停止10秒前の final も張る
+async function startAutoStopCountdown(minutes) {
+  const value = clampMinutes(minutes);
+  const when = Date.now() + value * 60000;
+  await chrome.alarms.clear(AUTO_STOP_ALARM);
+  await chrome.alarms.clear(AUTO_STOP_TICK);
+  await chrome.alarms.clear(AUTO_STOP_FINAL);
+  stopFinalCountdown();
+  chrome.alarms.create(AUTO_STOP_ALARM, { when });
+  chrome.alarms.create(AUTO_STOP_TICK, { periodInMinutes: 1 });
+  chrome.alarms.create(AUTO_STOP_FINAL, { when: when - FINAL_COUNTDOWN_MS });
+  await storageSet({ autoStopAt: when, autoStopMinutes: value });
+  await refreshBadge();
+  return { autoStopAt: when, autoStopMinutes: value };
+}
+
+// カウントダウンだけ止める（予約 autoStopEnabled は保持する）
+async function clearAutoStopCountdown() {
+  await chrome.alarms.clear(AUTO_STOP_ALARM);
+  await chrome.alarms.clear(AUTO_STOP_TICK);
+  await chrome.alarms.clear(AUTO_STOP_FINAL);
+  stopFinalCountdown();
+  await storageSet({ autoStopAt: null });
+  await refreshBadge();
+}
+
+// チェックのON/OFF: 予約を保存し、取得中なら即カウントダウン開始/停止する
+async function armAutoStop(enabled, minutes) {
+  const value = clampMinutes(minutes);
+  await storageSet({ autoStopEnabled: Boolean(enabled), autoStopMinutes: value });
+  const { isEnabled } = await storageGet(['isEnabled']);
+  if (enabled && isEnabled) {
+    return { autoStopEnabled: true, ...(await startAutoStopCountdown(value)) };
+  }
+  await clearAutoStopCountdown();
+  return { autoStopEnabled: Boolean(enabled), autoStopAt: null, autoStopMinutes: value };
+}
+
+// スライダー変更: 分を保存し、カウントダウン中なら今からで張り直す
+async function setAutoStopMinutes(minutes) {
+  const value = clampMinutes(minutes);
+  await storageSet({ autoStopMinutes: value });
+  const { autoStopAt } = await storageGet(['autoStopAt']);
+  if (autoStopAt && autoStopAt > Date.now()) {
+    return { autoStopEnabled: true, ...(await startAutoStopCountdown(value)) };
+  }
+  return { autoStopAt: null, autoStopMinutes: value };
+}
+
+chrome.alarms.onAlarm.addListener((alarm) => {
+  if (alarm.name === AUTO_STOP_TICK) {
+    // バッジの残り分を更新（残りが尽きたら本体アラームが停止する）
+    refreshBadge().catch(() => {});
+    return;
+  }
+  if (alarm.name === AUTO_STOP_FINAL) {
+    // 停止10秒前: バッジを秒読みに切り替える
+    storageGet(['autoStopAt']).then(({ autoStopAt }) => {
+      if (autoStopAt && autoStopAt > Date.now()) startFinalCountdown(autoStopAt);
+    });
+    return;
+  }
+  if (alarm.name !== AUTO_STOP_ALARM) return;
+  // 停止前に読み取りステータスへ知らせてから完全停止する
+  stopFinalCountdown();
+  if (activeSession?.tabId) {
+    sendToTab(activeSession.tabId, { type: 'stream-status', text: '⏰ 自動停止タイマーにより停止しました' });
+  }
+  stopCapture().catch(() => {});
+});
 
 async function appendTranscript(text, meta = {}) {
   const result = await storageGet(['transcriptLog']);
@@ -287,7 +407,10 @@ chrome.runtime.onInstalled.addListener(async () => {
     targetLanguage: 'ja',
     chunkMillis: 5000,
     vadThreshold: 10,
-    silenceMillis: 700
+    silenceMillis: 700,
+    autoStopAt: null,
+    autoStopMinutes: 10,
+    autoStopEnabled: false
   };
   const stored = await storageGet(Object.keys(defaults));
   const nextValues = {};
@@ -295,7 +418,7 @@ chrome.runtime.onInstalled.addListener(async () => {
     if (stored[key] === undefined) nextValues[key] = value;
   }
   if (Object.keys(nextValues).length > 0) await storageSet(nextValues);
-  updateBadge(false);
+  await refreshBadge();
 });
 
 chrome.tabs.onRemoved.addListener((tabId) => {
@@ -333,6 +456,20 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     return true;
   }
 
+  if (message.type === 'armAutoStop') {
+    armAutoStop(message.enabled, message.minutes)
+      .then((result) => sendResponse({ ok: true, ...result }))
+      .catch((error) => sendResponse({ ok: false, error: error.message }));
+    return true;
+  }
+
+  if (message.type === 'setAutoStopMinutes') {
+    setAutoStopMinutes(message.minutes)
+      .then((result) => sendResponse({ ok: true, ...result }))
+      .catch((error) => sendResponse({ ok: false, error: error.message }));
+    return true;
+  }
+
   if (message.type === 'getState') {
     storageGet([
       'isEnabled',
@@ -347,7 +484,10 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       'translationEnabled',
       'translationProvider',
       'targetLanguage',
-      'deeplApiKey'
+      'deeplApiKey',
+      'autoStopAt',
+      'autoStopMinutes',
+      'autoStopEnabled'
     ]).then((result) => {
       sendResponse({
         ok: true,
@@ -363,7 +503,10 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         translationEnabled: Boolean(result.translationEnabled),
         translationProvider: result.translationProvider || 'google',
         targetLanguage: result.targetLanguage || 'ja',
-        hasDeepLApiKey: Boolean(result.deeplApiKey)
+        hasDeepLApiKey: Boolean(result.deeplApiKey),
+        autoStopAt: Number(result.autoStopAt) || null,
+        autoStopMinutes: Number(result.autoStopMinutes) || 10,
+        autoStopEnabled: Boolean(result.autoStopEnabled)
       });
     });
     return true;
@@ -416,8 +559,10 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message.type === 'capture-stopped') {
     const tabId = activeSession?.tabId || sender.tab?.id;
     activeSession = null;
-    storageSet({ isEnabled: false, activeTabId: null, activeUrl: '', activeTitle: '' }).catch(() => {});
-    updateBadge(false);
+    clearAutoStopCountdown()
+      .then(() => storageSet({ isEnabled: false, activeTabId: null, activeUrl: '', activeTitle: '' }))
+      .then(() => refreshBadge())
+      .catch(() => {});
     if (tabId) sendToTab(tabId, { type: 'state-changed', enabled: false });
     sendResponse({ ok: true });
     return true;
