@@ -5,36 +5,31 @@
     <title>Stream Speech Layer</title>
     <style>
       body {
-        width: 340px;
+        width: 300px;
         margin: 0;
         padding: 12px;
         color: #181b20;
         font-family: Arial, sans-serif;
       }
 
+      .header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 10px;
+      }
+
       h1 {
-        margin: 0 0 10px;
+        margin: 0;
         font-size: 16px;
       }
 
-      label {
-        display: block;
-        margin-top: 10px;
-        font-size: 12px;
-        font-weight: 700;
-      }
-
-      input,
-      select,
       button {
         box-sizing: border-box;
         width: 100%;
         margin-top: 6px;
         padding: 8px;
         font: inherit;
-      }
-
-      button {
         border: 0;
         border-radius: 6px;
         background: #1565c0;
@@ -43,8 +38,18 @@
         font-weight: 700;
       }
 
-      button.secondary {
-        background: #4b5563;
+      #openOptions {
+        width: auto;
+        margin: 0;
+        padding: 6px 8px;
+        background: transparent;
+        color: #4b5563;
+        font-size: 18px;
+        line-height: 1;
+      }
+
+      #openOptions:hover {
+        color: #1565c0;
       }
 
       #status {
@@ -59,52 +64,13 @@
         line-height: 1.4;
       }
 
-      .toggle-row {
-        display: flex;
-        gap: 8px;
-        align-items: center;
-        margin-top: 10px;
-        font-size: 12px;
-        font-weight: 700;
-      }
-
-      .toggle-row input {
-        width: auto;
-        margin: 0;
-      }
-
-      .inline-actions {
-        display: grid;
-        grid-template-columns: 1fr auto;
-        gap: 8px;
-        align-items: end;
-      }
-
-      .inline-actions input {
-        margin-top: 6px;
-      }
-
-      .inline-actions button {
-        width: auto;
-        min-width: 72px;
-      }
-
-      .key-status {
-        margin-top: 6px;
-        font-size: 12px;
-        font-weight: 700;
-      }
-
-      .key-status.saved {
-        color: #15803d;
-      }
-
-      .key-status.empty {
-        color: #9a3412;
+      h2 {
+        font-size: 14px;
+        margin: 14px 0 0;
       }
 
       ul {
-        max-height: 180px;
+        max-height: 220px;
         overflow: auto;
         margin: 8px 0 0;
         padding-left: 18px;
@@ -117,59 +83,16 @@
     </style>
   </head>
   <body>
-    <h1>Stream Speech Layer</h1>
+    <div class="header">
+      <h1>Stream Speech Layer</h1>
+      <button id="openOptions" type="button" title="設定を開く">⚙</button>
+    </div>
     <button id="toggle">開始する</button>
     <div id="status">停止中</div>
     <div id="target" class="hint"></div>
+    <div class="hint">開始すると現在の YouTube / Twitch タブ音声だけを取得します。設定は⚙から変更できます。</div>
 
-    <label for="provider">認識エンジン</label>
-    <select id="provider">
-      <option value="none">未設定</option>
-      <option value="groq">Groq Whisper API</option>
-    </select>
-
-    <label for="language">配信音声の言語</label>
-    <select id="language">
-      <option value="ja">日本語</option>
-      <option value="en">英語</option>
-      <option value="auto">自動</option>
-    </select>
-
-    <label class="toggle-row" for="translationEnabled">
-      <input id="translationEnabled" type="checkbox" />
-      音声認識後に翻訳する
-    </label>
-
-    <label for="targetLanguage">翻訳先言語</label>
-    <select id="targetLanguage">
-      <option value="ja">日本語</option>
-      <option value="en">英語</option>
-      <option value="ko">韓国語</option>
-    </select>
-
-    <label for="translationProvider">翻訳エンジン</label>
-    <select id="translationProvider">
-      <option value="google">Google Translate</option>
-      <option value="deepl">DeepL API</option>
-    </select>
-
-    <label for="deeplKey">DeepL API キー</label>
-    <div class="inline-actions">
-      <input id="deeplKey" type="password" autocomplete="off" placeholder="DeepL Free は末尾に :fx" />
-      <button id="clearDeepLKey" class="secondary" type="button">削除</button>
-    </div>
-    <div id="deeplKeyStatus" class="key-status empty">未保存</div>
-
-    <label for="groqKey">Groq API キー</label>
-    <div class="inline-actions">
-      <input id="groqKey" type="password" autocomplete="off" placeholder="新しいキーを入力" />
-      <button id="clearGroqKey" class="secondary" type="button">削除</button>
-    </div>
-    <div id="groqKeyStatus" class="key-status empty">未保存</div>
-    <button id="saveSettings" class="secondary">設定を保存</button>
-    <div class="hint">開始すると現在の YouTube / Twitch タブ音声だけを取得します。</div>
-
-    <h2 style="font-size:14px;margin:14px 0 0;">最近の文字起こし</h2>
+    <h2>最近の文字起こし</h2>
     <ul id="log"></ul>
     <script src="popup.js"></script>
   </body>
