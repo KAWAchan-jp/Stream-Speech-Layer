@@ -92,7 +92,7 @@
 
       .inline-actions {
         display: grid;
-        grid-template-columns: 1fr auto;
+        grid-template-columns: 1fr auto auto;
         gap: 8px;
         align-items: end;
       }
@@ -120,6 +120,59 @@
         color: #9a3412;
       }
 
+      .style-row {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: flex-end;
+        gap: 12px;
+        margin-top: 14px;
+      }
+
+      .style-label {
+        flex: 1 1 100%;
+        font-size: 12px;
+        font-weight: 700;
+      }
+
+      .style-field {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        margin-top: 0;
+        font-size: 11px;
+        font-weight: 700;
+        color: #5f6875;
+      }
+
+      .style-visible {
+        flex-direction: row;
+        align-items: center;
+        gap: 4px;
+      }
+
+      .style-visible input[type="checkbox"] {
+        width: auto;
+        margin: 0;
+      }
+
+      .style-field input[type="number"] {
+        width: 90px;
+        margin-top: 0;
+      }
+
+      .style-field input[type="color"] {
+        width: 48px;
+        height: 34px;
+        margin-top: 0;
+        padding: 2px;
+      }
+
+      .opacity-value {
+        margin-left: 6px;
+        color: #5f6875;
+        font-weight: 400;
+      }
+
       .footer {
         display: flex;
         gap: 12px;
@@ -131,11 +184,77 @@
         font-weight: 700;
         font-size: 13px;
       }
+
+      .recommend {
+        margin-top: 16px;
+        padding: 14px 16px;
+        border: 1px solid #cfe3ff;
+        border-radius: 10px;
+        background: #f2f8ff;
+        font-size: 13px;
+        line-height: 1.6;
+      }
+
+      .recommend h2 {
+        margin: 0 0 6px;
+        font-size: 14px;
+        color: #1565c0;
+      }
+
+      .recommend ul {
+        margin: 6px 0 0;
+        padding-left: 18px;
+      }
+
+      .recommend li {
+        margin-bottom: 6px;
+      }
+
+      .recommend .note {
+        color: #9a3412;
+        font-weight: 700;
+      }
     </style>
   </head>
   <body>
     <h1>Stream Speech Layer 設定</h1>
     <p class="subtitle">認識・翻訳の設定と API キーを管理します。</p>
+
+    <div class="recommend">
+      <h2>おすすめ: Groq（音声認識）+ DeepL（翻訳）</h2>
+      <p>どちらも無料枠だけで日常的に使えます。API キーを取得すれば追加費用なしで始められます。</p>
+      <ul>
+        <li>
+          <strong>Groq（音声認識）</strong>: 無料枠でも配信内容にもよりますが 1 日あたり
+          おおよそ 1〜2 時間ぶんの文字起こしに使えます（目安: 1 日 2,000 リクエスト /
+          1 時間あたり音声 7,200 秒）。上限は<strong>翌日リセット</strong>されます。
+        </li>
+        <li>
+          <strong>DeepL（翻訳）</strong>: 無料枠（DeepL API Free）は<strong>月 50 万文字</strong>まで
+          翻訳できます。字幕は 1 文が短いため通常は十分な量です。
+          <span class="note">※こちらは日次ではなく毎月リセットです。</span>
+        </li>
+      </ul>
+    </div>
+
+    <div class="recommend">
+      <h2>上限エラーが出たときの対処</h2>
+      <p>読み取りステータスに赤字の警告が出たら、以下を試してください。</p>
+      <ul>
+        <li>
+          <strong>Groq（音声認識）が上限</strong>: 現状ほかの認識エンジンが未実装のため、
+          <strong>翌日のリセットまで待つ</strong>しかありません。それまで文字起こしは止まります。
+        </li>
+        <li>
+          <strong>DeepL（翻訳）が上限</strong>: 翻訳エンジンを
+          <strong>Google Translate に切り替えて</strong>ください
+          （翻訳エンジンの選択を「Google Translate」にして保存）。
+          <span class="note">※翻訳精度は DeepL より落ちます。</span>
+        </li>
+      </ul>
+    </div>
+
+    <p class="subtitle">選択項目は変更するとすぐに保存されます。API キーは入力後に「保存」を押してください。</p>
 
     <div class="card">
       <h2>音声認識</h2>
@@ -155,9 +274,14 @@
       <label for="groqKey">Groq API キー</label>
       <div class="inline-actions">
         <input id="groqKey" type="password" autocomplete="off" placeholder="新しいキーを入力" />
+        <button id="saveGroqKey" type="button">保存</button>
         <button id="clearGroqKey" class="secondary" type="button">削除</button>
       </div>
       <div id="groqKeyStatus" class="key-status empty">未保存</div>
+      <p class="hint">
+        キーの取得:
+        <a href="https://console.groq.com/keys" target="_blank" rel="noopener">console.groq.com/keys</a>
+      </p>
     </div>
 
     <div class="card">
@@ -183,13 +307,71 @@
       <label for="deeplKey">DeepL API キー</label>
       <div class="inline-actions">
         <input id="deeplKey" type="password" autocomplete="off" placeholder="DeepL Free は末尾に :fx" />
+        <button id="saveDeepLKey" type="button">保存</button>
         <button id="clearDeepLKey" class="secondary" type="button">削除</button>
       </div>
       <div id="deeplKeyStatus" class="key-status empty">未保存</div>
+      <p class="hint">
+        キーの取得:
+        <a href="https://www.deepl.com/pro-api" target="_blank" rel="noopener">deepl.com/pro-api</a>
+        （登録後
+        <a href="https://www.deepl.com/your-account/keys" target="_blank" rel="noopener">アカウント設定</a>
+        でキーを確認）
+      </p>
+    </div>
+
+    <div class="card">
+      <h2>字幕パネルの表示</h2>
+      <p class="hint">文字サイズ・色・背景の透過率を変更できます。変更は即座にパネルへ反映されます。</p>
+
+      <div class="style-row">
+        <span class="style-label">読み取りステータス</span>
+        <label class="style-field style-visible" for="statusVisible">
+          <input id="statusVisible" type="checkbox" /> 表示
+        </label>
+        <label class="style-field" for="statusFontSize">サイズ(px)
+          <input id="statusFontSize" type="number" min="8" max="48" step="1" />
+        </label>
+        <label class="style-field" for="statusColor">色
+          <input id="statusColor" type="color" />
+        </label>
+      </div>
+
+      <div class="style-row">
+        <span class="style-label">配信音声の文字起こし</span>
+        <label class="style-field style-visible" for="transcriptVisible">
+          <input id="transcriptVisible" type="checkbox" /> 表示
+        </label>
+        <label class="style-field" for="transcriptFontSize">サイズ(px)
+          <input id="transcriptFontSize" type="number" min="8" max="48" step="1" />
+        </label>
+        <label class="style-field" for="transcriptColor">色
+          <input id="transcriptColor" type="color" />
+        </label>
+      </div>
+
+      <div class="style-row">
+        <span class="style-label">翻訳された文</span>
+        <label class="style-field style-visible" for="translationVisible">
+          <input id="translationVisible" type="checkbox" /> 表示
+        </label>
+        <label class="style-field" for="translationFontSize">サイズ(px)
+          <input id="translationFontSize" type="number" min="8" max="48" step="1" />
+        </label>
+        <label class="style-field" for="translationColor">色
+          <input id="translationColor" type="color" />
+        </label>
+      </div>
+
+      <label for="backgroundOpacity">背景の黒四角の不透明度
+        <span id="backgroundOpacityValue" class="opacity-value"></span>
+      </label>
+      <input id="backgroundOpacity" type="range" min="0" max="1" step="0.01" />
+
+      <button id="resetStyle" class="secondary" type="button">表示設定を初期値に戻す</button>
     </div>
 
     <div class="footer">
-      <button id="saveSettings">設定を保存</button>
       <div id="status"></div>
     </div>
 

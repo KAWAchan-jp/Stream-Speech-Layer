@@ -16,8 +16,18 @@ let chunkTimer = null;
 let maxLevel = 0;
 let hadSpeech = false;
 
-function sendStatus(text) {
-  chrome.runtime.sendMessage({ type: 'capture-status', text }).catch(() => {});
+function sendStatus(text, isError = false) {
+  chrome.runtime.sendMessage({ type: 'capture-status', text, isError }).catch(() => {});
+}
+
+// 認識エラーを読み取りステータス向けの警告文に変換して通知する
+function reportTranscribeError(error) {
+  const message = error?.message || String(error);
+  if (/\b429\b/.test(message)) {
+    sendStatus('⚠ Groqの利用上限に達しました。翌日のリセットまでお待ちください', true);
+  } else {
+    sendStatus(`認識エラー: ${message}`, true);
+  }
 }
 
 function resetChunkState() {
@@ -104,9 +114,7 @@ function createRecorder(stream) {
     }
 
     const blob = new Blob(stoppedChunks, { type: stoppedMimeType });
-    transcribeChunk(blob, stoppedMimeType).catch((error) => {
-      sendStatus(`認識エラー: ${error.message}`);
-    });
+    transcribeChunk(blob, stoppedMimeType).catch(reportTranscribeError);
   };
 
   return recorder;
