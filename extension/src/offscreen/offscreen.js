@@ -24,7 +24,7 @@ function sendStatus(text, isError = false) {
 function reportTranscribeError(error) {
   const message = error?.message || String(error);
   if (/\b429\b/.test(message)) {
-    sendStatus('⚠ Groqの利用上限に達しました（翌日リセット）', true);
+    sendStatus('⚠ Groqの利用上限に達しました。翌日のリセットまでお待ちください', true);
   } else {
     sendStatus(`認識エラー: ${message}`, true);
   }

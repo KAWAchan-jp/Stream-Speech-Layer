@@ -237,6 +237,23 @@
       </ul>
     </div>
 
+    <div class="recommend">
+      <h2>上限エラーが出たときの対処</h2>
+      <p>読み取りステータスに赤字の警告が出たら、以下を試してください。</p>
+      <ul>
+        <li>
+          <strong>Groq（音声認識）が上限</strong>: 現状ほかの認識エンジンが未実装のため、
+          <strong>翌日のリセットまで待つ</strong>しかありません。それまで文字起こしは止まります。
+        </li>
+        <li>
+          <strong>DeepL（翻訳）が上限</strong>: 翻訳エンジンを
+          <strong>Google Translate に切り替えて</strong>ください
+          （翻訳エンジンの選択を「Google Translate」にして保存）。
+          <span class="note">※翻訳精度は DeepL より落ちます。</span>
+        </li>
+      </ul>
+    </div>
+
     <div class="card">
       <h2>音声認識</h2>
       <label for="provider">認識エンジン</label>

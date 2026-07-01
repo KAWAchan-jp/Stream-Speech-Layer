@@ -160,10 +160,10 @@ async function appendTranscript(text, meta = {}) {
 function describeTranslationError(error) {
   const message = error?.message || String(error);
   if (/DeepL/i.test(message) && /\b456\b/.test(message)) {
-    return '⚠ DeepLの月間利用上限に達しました（翌月リセット）';
+    return '⚠ DeepLの月間上限に達しました。翻訳エンジンをGoogleに切り替えてください（精度は低下します）';
   }
   if (/\b429\b/.test(message) || /\b456\b/.test(message)) {
-    return '⚠ 翻訳サービスの利用上限に達しました。時間をおいて再試行してください';
+    return '⚠ 翻訳の利用上限に達しました。翻訳エンジンをGoogleに切り替えるか、時間をおいて再試行してください';
   }
   return `翻訳エラー: ${message}`;
 }
