@@ -28,6 +28,9 @@ const DEFAULT_STYLE = {
 };
 
 let currentStyle = { ...DEFAULT_STYLE };
+let statusIsError = false;
+
+const STATUS_ERROR_COLOR = '#ff5252';
 
 function applyStyle(style) {
   currentStyle = { ...DEFAULT_STYLE, ...(style || {}) };
@@ -37,7 +40,8 @@ function applyStyle(style) {
   }
   if (textNode) {
     textNode.style.fontSize = `${currentStyle.statusFontSize}px`;
-    textNode.style.color = currentStyle.statusColor;
+    textNode.style.color = statusIsError ? STATUS_ERROR_COLOR : currentStyle.statusColor;
+    textNode.style.fontWeight = statusIsError ? '700' : '';
     textNode.style.display = currentStyle.statusVisible ? '' : 'none';
   }
   if (lastTranscriptNode) {
@@ -321,10 +325,15 @@ function removeOverlay() {
   resizeState = null;
 }
 
-function setStatus(text) {
+function setStatus(text, isError = false) {
   if (!isEnabled) return;
   createOverlay();
-  if (textNode) textNode.textContent = text || '';
+  statusIsError = Boolean(isError);
+  if (textNode) {
+    textNode.textContent = text || '';
+    textNode.style.color = statusIsError ? STATUS_ERROR_COLOR : currentStyle.statusColor;
+    textNode.style.fontWeight = statusIsError ? '700' : '';
+  }
 }
 
 function setTranscript(text, translatedText = '') {
@@ -378,7 +387,7 @@ chrome.runtime.onMessage.addListener((message) => {
   }
 
   if (message.type === 'stream-status') {
-    setStatus(message.text || '');
+    setStatus(message.text || '', message.isError);
   }
 
   if (message.type === 'transcript-update') {

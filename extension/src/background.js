@@ -138,7 +138,7 @@ async function appendTranscript(text, meta = {}) {
   const result = await storageGet(['transcriptLog']);
   const translatedText = await translateTranscriptIfNeeded(text).catch((error) => {
     if (activeSession?.tabId) {
-      sendToTab(activeSession.tabId, { type: 'stream-status', text: `翻訳エラー: ${error.message}` });
+      sendToTab(activeSession.tabId, { type: 'stream-status', text: describeTranslationError(error), isError: true });
     }
     return '';
   });
@@ -154,6 +154,18 @@ async function appendTranscript(text, meta = {}) {
   await storageSet({ transcriptLog: nextLog, lastTranscript: text, lastTranslation: translatedText });
   if (activeSession?.tabId) sendToTab(activeSession.tabId, { type: 'transcript-update', text, translatedText });
   return { entry, count: nextLog.length };
+}
+
+// 翻訳エラーを読み取りステータス向けの警告文に変換する
+function describeTranslationError(error) {
+  const message = error?.message || String(error);
+  if (/DeepL/i.test(message) && /\b456\b/.test(message)) {
+    return '⚠ DeepLの月間利用上限に達しました（翌月リセット）';
+  }
+  if (/\b429\b/.test(message) || /\b456\b/.test(message)) {
+    return '⚠ 翻訳サービスの利用上限に達しました。時間をおいて再試行してください';
+  }
+  return `翻訳エラー: ${message}`;
 }
 
 async function translateTranscriptIfNeeded(text) {
@@ -394,7 +406,9 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   }
 
   if (message.type === 'capture-status') {
-    if (activeSession?.tabId) sendToTab(activeSession.tabId, { type: 'stream-status', text: message.text });
+    if (activeSession?.tabId) {
+      sendToTab(activeSession.tabId, { type: 'stream-status', text: message.text, isError: Boolean(message.isError) });
+    }
     sendResponse({ ok: true });
     return true;
   }
