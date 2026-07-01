@@ -1,6 +1,29 @@
 # Stream Speech Layer
 
-YouTube / Twitch の配信タブ音声を取得し、音声認識・翻訳・字幕表示・ログ保存を行う Chrome / Brave 向け Chromium 拡張です。
+> 配信の「声」を、その場で字幕に。
+
+YouTube / Twitch の配信タブ音声をリアルタイムに文字起こし・翻訳し、配信画面へそのまま字幕を重ねて表示する Chrome / Brave 向け Chromium 拡張です。ログ保存にも対応し、あとから見返せます。
+
+![version](https://img.shields.io/badge/version-0.1.0-1565c0)
+![platform](https://img.shields.io/badge/platform-Chrome%20%7C%20Brave-4c8bf5)
+![manifest](https://img.shields.io/badge/Manifest-v3-f59e0b)
+![status](https://img.shields.io/badge/status-開発版-9a3412)
+
+## 特長
+
+- 🎧 **タブ音声をそのまま認識** — マイクではなく配信タブの音声を直接取り込み
+- 📝 **リアルタイム文字起こし** — Groq Whisper API で高速に認識
+- 🌐 **その場で翻訳** — Google Translate / DeepL に対応
+- 🈶 **配信画面へ字幕オーバーレイ** — ドラッグ移動・サイズ変更・表示スタイルを自由に調整
+- 💾 **文字起こしログ保存** — 直近 50 件をローカルに記録
+- 🆓 **無料枠だけで実用** — Groq・DeepL の無料枠で日常利用が可能
+
+## こんな人におすすめ
+
+- 海外配信の音声を日本語字幕で理解したい
+- YouTube / Twitch 配信にリアルタイム字幕を付けたい
+- 配信で話された内容を文字として記録しておきたい
+- 追加費用をかけず、無料枠で音声翻訳字幕を試したい
 
 ## 対応環境
 
