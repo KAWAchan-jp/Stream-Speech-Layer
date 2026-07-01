@@ -10,6 +10,49 @@ let isEnabled = false;
 
 const DEFAULT_OVERLAY_OFFSET = 16;
 
+const DEFAULT_STYLE = {
+  statusFontSize: 13,
+  statusColor: '#ffffff',
+  statusVisible: true,
+  transcriptFontSize: 15,
+  transcriptColor: '#ffffff',
+  transcriptVisible: true,
+  translationFontSize: 17,
+  translationColor: '#ffffff',
+  translationVisible: true,
+  backgroundOpacity: 0.88
+};
+
+let currentStyle = { ...DEFAULT_STYLE };
+
+function applyStyle(style) {
+  currentStyle = { ...DEFAULT_STYLE, ...(style || {}) };
+
+  if (overlay) {
+    overlay.style.background = `rgba(12,14,18,${currentStyle.backgroundOpacity})`;
+  }
+  if (textNode) {
+    textNode.style.fontSize = `${currentStyle.statusFontSize}px`;
+    textNode.style.color = currentStyle.statusColor;
+    textNode.style.display = currentStyle.statusVisible ? '' : 'none';
+  }
+  if (lastTranscriptNode) {
+    lastTranscriptNode.style.fontSize = `${currentStyle.transcriptFontSize}px`;
+    lastTranscriptNode.style.color = currentStyle.transcriptColor;
+    lastTranscriptNode.style.display = currentStyle.transcriptVisible ? '' : 'none';
+  }
+  if (translationNode) {
+    translationNode.style.fontSize = `${currentStyle.translationFontSize}px`;
+    translationNode.style.color = currentStyle.translationColor;
+    translationNode.style.display = currentStyle.translationVisible ? '' : 'none';
+  }
+}
+
+async function restoreStyle() {
+  const state = await chrome.storage.local.get(['subtitleStyle']);
+  applyStyle(state.subtitleStyle);
+}
+
 function clamp(value, min, max) {
   return Math.min(Math.max(value, min), max);
 }
@@ -161,8 +204,10 @@ function createOverlay() {
   overlay.appendChild(translationNode);
 
   document.body.appendChild(overlay);
+  applyStyle(currentStyle);
   applyOverlayPosition();
   restoreOverlayPosition().catch(() => {});
+  restoreStyle().catch(() => {});
   return overlay;
 }
 
@@ -216,6 +261,9 @@ chrome.storage.onChanged.addListener((changes, areaName) => {
   }
   if ('subtitleOverlayPosition' in changes && overlay) {
     applyOverlayPosition(changes.subtitleOverlayPosition.newValue);
+  }
+  if ('subtitleStyle' in changes) {
+    applyStyle(changes.subtitleStyle.newValue);
   }
 });
 
