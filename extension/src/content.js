@@ -6,9 +6,13 @@ let lastTranscriptNode = null;
 let translationNode = null;
 let dragHandle = null;
 let dragState = null;
+let resizeHandle = null;
+let resizeState = null;
 let isEnabled = false;
 
 const DEFAULT_OVERLAY_OFFSET = 16;
+const MIN_OVERLAY_WIDTH = 200;
+const MIN_OVERLAY_HEIGHT = 80;
 
 const DEFAULT_STYLE = {
   statusFontSize: 13,
@@ -139,6 +143,79 @@ function endDrag(event) {
   saveOverlayPosition();
 }
 
+function applyOverlaySize(size) {
+  if (!overlay || !size) return;
+  if (Number(size.width) > 0) {
+    overlay.style.width = `${Math.max(MIN_OVERLAY_WIDTH, Number(size.width))}px`;
+  }
+  if (Number(size.height) > 0) {
+    overlay.style.height = `${Math.max(MIN_OVERLAY_HEIGHT, Number(size.height))}px`;
+    overlay.style.overflowY = 'auto';
+  }
+}
+
+async function restoreOverlaySize() {
+  const state = await chrome.storage.local.get(['subtitleOverlaySize']);
+  applyOverlaySize(state.subtitleOverlaySize);
+}
+
+function saveOverlaySize() {
+  if (!overlay) return;
+  const rect = overlay.getBoundingClientRect();
+  chrome.storage.local.set({
+    subtitleOverlaySize: {
+      width: Math.round(rect.width),
+      height: Math.round(rect.height)
+    }
+  }).catch(() => {});
+}
+
+function startResize(event) {
+  if (!overlay || event.button > 0) return;
+
+  const rect = overlay.getBoundingClientRect();
+  resizeState = {
+    pointerId: event.pointerId,
+    startX: event.clientX,
+    startY: event.clientY,
+    startWidth: rect.width,
+    startHeight: rect.height,
+    left: rect.left,
+    top: rect.top
+  };
+
+  resizeHandle.setPointerCapture(event.pointerId);
+  event.preventDefault();
+  event.stopPropagation();
+}
+
+function moveResize(event) {
+  if (!overlay || !resizeState || event.pointerId !== resizeState.pointerId) return;
+
+  const maxWidth = window.innerWidth - resizeState.left - DEFAULT_OVERLAY_OFFSET;
+  const maxHeight = window.innerHeight - resizeState.top - DEFAULT_OVERLAY_OFFSET;
+  const nextWidth = clamp(
+    resizeState.startWidth + (event.clientX - resizeState.startX),
+    MIN_OVERLAY_WIDTH,
+    Math.max(MIN_OVERLAY_WIDTH, maxWidth)
+  );
+  const nextHeight = clamp(
+    resizeState.startHeight + (event.clientY - resizeState.startY),
+    MIN_OVERLAY_HEIGHT,
+    Math.max(MIN_OVERLAY_HEIGHT, maxHeight)
+  );
+
+  overlay.style.width = `${nextWidth}px`;
+  overlay.style.height = `${nextHeight}px`;
+  overlay.style.overflowY = 'auto';
+}
+
+function endResize(event) {
+  if (!resizeState || event.pointerId !== resizeState.pointerId) return;
+  resizeState = null;
+  saveOverlaySize();
+}
+
 function createOverlay() {
   if (overlay) return overlay;
 
@@ -203,10 +280,30 @@ function createOverlay() {
   ].join(';');
   overlay.appendChild(translationNode);
 
+  resizeHandle = document.createElement('div');
+  resizeHandle.style.cssText = [
+    'position:absolute',
+    'right:2px',
+    'bottom:2px',
+    'width:14px',
+    'height:14px',
+    'cursor:nwse-resize',
+    'border-right:2px solid rgba(255,255,255,0.5)',
+    'border-bottom:2px solid rgba(255,255,255,0.5)',
+    'border-bottom-right-radius:6px'
+  ].join(';');
+  resizeHandle.title = 'ドラッグでサイズ変更';
+  resizeHandle.addEventListener('pointerdown', startResize);
+  resizeHandle.addEventListener('pointermove', moveResize);
+  resizeHandle.addEventListener('pointerup', endResize);
+  resizeHandle.addEventListener('pointercancel', endResize);
+  overlay.appendChild(resizeHandle);
+
   document.body.appendChild(overlay);
   applyStyle(currentStyle);
   applyOverlayPosition();
   restoreOverlayPosition().catch(() => {});
+  restoreOverlaySize().catch(() => {});
   restoreStyle().catch(() => {});
   return overlay;
 }
@@ -220,6 +317,8 @@ function removeOverlay() {
   translationNode = null;
   dragHandle = null;
   dragState = null;
+  resizeHandle = null;
+  resizeState = null;
 }
 
 function setStatus(text) {

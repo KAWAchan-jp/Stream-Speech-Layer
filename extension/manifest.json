@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Stream Speech Layer",
-  "version": "0.0.9",
+  "version": "0.0.10",
   "description": "配信音声を取得して文字起こし・表示・保存する Chromium 拡張",
   "permissions": [
     "offscreen",
