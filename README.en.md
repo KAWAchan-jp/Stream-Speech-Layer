@@ -6,7 +6,7 @@
 
 A Chromium extension for Chrome / Brave that transcribes and translates the audio of a YouTube / Twitch stream tab in real time, and overlays the subtitles directly onto the stream. It also saves a log so you can look back later.
 
-![version](https://img.shields.io/badge/version-0.1.0-1565c0)
+![version](https://img.shields.io/badge/version-0.2.0-1565c0)
 ![platform](https://img.shields.io/badge/platform-Chrome%20%7C%20Brave-4c8bf5)
 ![manifest](https://img.shields.io/badge/Manifest-v3-f59e0b)
 ![status](https://img.shields.io/badge/status-development-9a3412)
@@ -18,6 +18,7 @@ A Chromium extension for Chrome / Brave that transcribes and translates the audi
 - 🌐 **On-the-fly translation** — supports Google Translate / DeepL
 - 🈶 **Subtitle overlay on the stream** — freely drag, resize, and style the panel
 - 💾 **Transcription log** — keeps the latest 50 entries locally
+- ⏰ **Auto-stop timer** — stops automatically after a set time so a stream isn't left running
 - 🆓 **Practical on free tiers** — usable daily within the Groq and DeepL free tiers
 
 ## Who it's for
@@ -63,6 +64,7 @@ After updating the extension, reload it on the extensions page and refresh the s
 
 - Start / Stop
 - Current status and the target tab
+- Auto-stop timer (slider 1–60 min, ON/OFF)
 - List of recent transcriptions
 - ⚙ button to open the settings page
 
@@ -76,6 +78,18 @@ Configure recognition, translation, API keys, and the subtitle panel's appearanc
 
 Select and checkbox items are **saved immediately when changed**, while API keys are saved by pressing the **"Save" button** after entering them.
 
+## Auto-stop timer
+
+An auto-stop timer so you don't leave a stream running if you doze off or step away. It sits below the Start button in the popup.
+
+- Set **1–60 minutes** (default 10) with the slider, and turn it on/off with the checkbox
+- The checkbox is a "reservation": the **countdown starts when you press "Start"** (or right away if capture is already running)
+- When the time is up, it **fully stops capture**, not just Groq / DeepL
+- The toolbar icon badge shows the remaining time (in minutes, with a red seconds countdown for the last 10 seconds)
+- Stopping manually or closing the tab cancels the countdown (the reservation is kept)
+
+Internally it uses `chrome.alarms` so it fires reliably even if the service worker goes idle.
+
 ## Implemented features
 
 - Capturing audio from the current YouTube / Twitch tab
@@ -88,6 +102,7 @@ Select and checkbox items are **saved immediately when changed**, while API keys
 - Resizing via the bottom-right handle and size saving for the subtitle overlay
 - Subtitle panel display settings (per-element font size, color, and visibility; background opacity; reset to defaults)
 - Red warning on the reading status when a usage limit error occurs
+- Auto-stop timer (fully stops after 1–60 minutes; remaining time shown on the badge; seconds countdown for the last 10 seconds)
 - Per-item settings saving (select items auto-save; API keys save individually)
 - Recent transcription display in the popup
 - Saved-state display for the Groq / DeepL API keys
@@ -184,6 +199,7 @@ In addition, the following are saved to restore the subtitle overlay:
 - `lastTranscript` / `lastTranslation`: the latest recognition and translation results
 - `subtitleOverlayPosition` / `subtitleOverlaySize`: the panel's position and size
 - `subtitleStyle`: the subtitle panel's display style
+- `autoStopEnabled` / `autoStopMinutes`: the auto-stop timer's reservation state and configured minutes
 
 ## External transmission
 
