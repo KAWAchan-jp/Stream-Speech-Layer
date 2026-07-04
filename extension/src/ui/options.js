@@ -14,6 +14,10 @@ const groqKeyStatusEl = document.getElementById('groqKeyStatus');
 const clearGroqKeyButton = document.getElementById('clearGroqKey');
 const saveGroqKeyButton = document.getElementById('saveGroqKey');
 const saveDeepLKeyButton = document.getElementById('saveDeepLKey');
+const geminiKeyEl = document.getElementById('geminiKey');
+const geminiKeyStatusEl = document.getElementById('geminiKeyStatus');
+const clearGeminiKeyButton = document.getElementById('clearGeminiKey');
+const saveGeminiKeyButton = document.getElementById('saveGeminiKey');
 
 const resetStyleButton = document.getElementById('resetStyle');
 const backgroundOpacityValueEl = document.getElementById('backgroundOpacityValue');
@@ -113,6 +117,10 @@ function updateDeepLKeyStatus(hasKey) {
   updateKeyStatus(deeplKeyStatusEl, clearDeepLKeyButton, hasKey);
 }
 
+function updateGeminiKeyStatus(hasKey) {
+  updateKeyStatus(geminiKeyStatusEl, clearGeminiKeyButton, hasKey);
+}
+
 async function refreshState() {
   const response = await chrome.runtime.sendMessage({ type: 'getState' });
   if (!response?.ok) return;
@@ -124,6 +132,7 @@ async function refreshState() {
   targetLanguageEl.value = response.targetLanguage || 'ja';
   updateGroqKeyStatus(Boolean(response.hasGroqApiKey));
   updateDeepLKeyStatus(Boolean(response.hasDeepLApiKey));
+  updateGeminiKeyStatus(Boolean(response.hasGeminiApiKey));
 }
 
 function collectSettings(extra = {}) {
@@ -144,6 +153,7 @@ async function saveCoreSettings(savedLabel) {
   if (response?.ok) {
     updateGroqKeyStatus(Boolean(response.hasGroqApiKey));
     updateDeepLKeyStatus(Boolean(response.hasDeepLApiKey));
+    updateGeminiKeyStatus(Boolean(response.hasGeminiApiKey));
     statusEl.textContent = `${savedLabel}を保存しました`;
   } else {
     statusEl.textContent = response?.error || '保存できませんでした';
@@ -181,6 +191,7 @@ async function saveApiKey({ button, input, keyField, label }) {
       input.value = '';
       updateGroqKeyStatus(Boolean(response.hasGroqApiKey));
       updateDeepLKeyStatus(Boolean(response.hasDeepLApiKey));
+      updateGeminiKeyStatus(Boolean(response.hasGeminiApiKey));
       statusEl.textContent = `${label}を保存しました`;
     } else {
       statusEl.textContent = response?.error || '保存できませんでした';
@@ -205,6 +216,15 @@ saveDeepLKeyButton.addEventListener('click', () => {
     input: deeplKeyEl,
     keyField: 'deeplApiKey',
     label: 'DeepL API キー'
+  });
+});
+
+saveGeminiKeyButton.addEventListener('click', () => {
+  saveApiKey({
+    button: saveGeminiKeyButton,
+    input: geminiKeyEl,
+    keyField: 'geminiApiKey',
+    label: 'Gemini API キー'
   });
 });
 
@@ -248,6 +268,29 @@ clearDeepLKeyButton.addEventListener('click', async () => {
   } finally {
     if (deeplKeyStatusEl.classList.contains('saved')) {
       clearDeepLKeyButton.disabled = false;
+    }
+  }
+});
+
+clearGeminiKeyButton.addEventListener('click', async () => {
+  clearGeminiKeyButton.disabled = true;
+  statusEl.textContent = 'Gemini API キーを削除中...';
+
+  try {
+    const response = await chrome.runtime.sendMessage(collectSettings({ clearGeminiApiKey: true }));
+    if (response?.ok) {
+      geminiKeyEl.value = '';
+      updateGeminiKeyStatus(false);
+      updateGroqKeyStatus(Boolean(response.hasGroqApiKey));
+      updateDeepLKeyStatus(Boolean(response.hasDeepLApiKey));
+      statusEl.textContent = 'Gemini API キーを削除しました';
+    } else {
+      statusEl.textContent = response?.error || '削除できませんでした';
+      await refreshState();
+    }
+  } finally {
+    if (geminiKeyStatusEl.classList.contains('saved')) {
+      clearGeminiKeyButton.disabled = false;
     }
   }
 });

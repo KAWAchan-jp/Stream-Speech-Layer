@@ -3,12 +3,39 @@
 const GROQ_TRANSCRIPTION_URL = 'https://api.groq.com/openai/v1/audio/transcriptions';
 const GROQ_MODEL = 'whisper-large-v3-turbo';
 
-export async function transcribeAudioChunk({ blob, mimeType, language, provider, groqApiKey }) {
+// 旧世代(2.5系)は無料枠RPDが極端に小さい(実測で1日20回)ため、現行世代のFlash-Liteを使う。
+// 無料枠の上限はモデル・アカウントごとに異なる（詳細は docs/gemini-notes.md）
+const GEMINI_MODEL = 'gemini-3.1-flash-lite';
+const GEMINI_TRANSCRIPTION_URL = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent`;
+
+// RPD(日次上限)到達後に6秒毎の無駄なリクエストを送り続けないためのフラグ。
+// キャプチャ開始時に resetGeminiDailyLimitFlag() でリセットする
+let geminiDailyLimitReached = false;
+
+export function resetGeminiDailyLimitFlag() {
+  geminiDailyLimitReached = false;
+}
+
+export async function transcribeAudioChunk({ blob, mimeType, language, provider, groqApiKey, geminiApiKey }) {
   if (provider === 'groq') {
     if (!groqApiKey) {
-      return { text: '', status: 'Groq API キーが未設定です' };
+      return { text: '', status: 'Groq API キーが未設定です', level: 'error' };
     }
     return transcribeWithGroq({ blob, mimeType, language, apiKey: groqApiKey });
+  }
+
+  if (provider === 'gemini') {
+    if (!geminiApiKey) {
+      return { text: '', status: 'Gemini API キーが未設定です', level: 'error' };
+    }
+    if (geminiDailyLimitReached) {
+      return {
+        text: '',
+        status: '本日のGemini無料枠(RPD)の上限に達しました。エンジンを切り替えるか翌日にご利用ください',
+        level: 'error'
+      };
+    }
+    return transcribeWithGemini({ blob, mimeType, language, apiKey: geminiApiKey });
   }
 
   return {
@@ -44,10 +71,125 @@ async function transcribeWithGroq({ blob, mimeType, language, apiKey }) {
   const text = String(result.text || '').trim();
 
   if (isLikelyHallucination(text)) {
-    return { text: '', status: 'ハルシネーションらしい認識結果を破棄しました' };
+    return { text: '', status: 'ハルシネーションらしい認識結果を破棄しました', level: 'warn' };
   }
 
   return { text, status: text ? '認識結果を保存しました' : '認識結果は空でした' };
+}
+
+async function transcribeWithGemini({ blob, mimeType, language, apiKey }) {
+  const fileType = normalizeMimeType(mimeType || blob.type);
+  const base64Audio = await blobToBase64(blob);
+
+  const response = await fetch(`${GEMINI_TRANSCRIPTION_URL}?key=${encodeURIComponent(apiKey)}`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      contents: [
+        {
+          parts: [
+            { text: buildGeminiTranscriptionPrompt(language) },
+            { inline_data: { mime_type: fileType, data: base64Audio } }
+          ]
+        }
+      ],
+      // 訳文や補足説明の混入を抑えるため温度は0にする
+      generationConfig: { temperature: 0 }
+    })
+  });
+
+  if (response.status === 429) {
+    return handleGeminiRateLimit(response);
+  }
+
+  if (!response.ok) {
+    const body = await response.text().catch(() => '');
+    throw new Error(`Gemini API ${response.status}: ${body || response.statusText}`);
+  }
+
+  const result = await response.json();
+  const text = extractGeminiText(result);
+
+  if (isLikelyHallucination(text)) {
+    return { text: '', status: 'ハルシネーションらしい認識結果を破棄しました', level: 'warn' };
+  }
+
+  return { text, status: text ? '認識結果を保存しました' : '認識結果は空でした' };
+}
+
+// 429のエラーボディからRPM(一時的)かRPD(日次上限)かを判別する。
+// ボディ全体の文字列一致だと説明文中の "per day" 等に誤反応するため、
+// 構造化された QuotaFailure.violations の quotaId だけを判定に使う
+async function handleGeminiRateLimit(response) {
+  const body = await response.text().catch(() => '');
+  // 判定の検証用に生のエラーボディを残す（offscreenのDevToolsコンソールで確認できる）
+  console.error('Gemini API 429:', body);
+
+  const violations = extractGeminiQuotaViolations(body);
+  const daily = violations.find((violation) => /perday/i.test(violation?.quotaId || ''));
+
+  if (daily) {
+    geminiDailyLimitReached = true;
+    const limit = daily.quotaValue ? `1日${daily.quotaValue}回` : 'RPD';
+    return {
+      text: '',
+      status: `本日のGemini無料枠(${limit})の上限に達しました。エンジンを切り替えるか翌日にご利用ください`,
+      level: 'error'
+    };
+  }
+  return { text: '', status: '一時的なレート制限のためスキップしました', level: 'warn' };
+}
+
+// エラーボディJSONから QuotaFailure の violations 配列を取り出す（無ければ空配列）
+function extractGeminiQuotaViolations(body) {
+  try {
+    const details = JSON.parse(body)?.error?.details;
+    if (!Array.isArray(details)) return [];
+    return details.flatMap((detail) => (Array.isArray(detail?.violations) ? detail.violations : []));
+  } catch (_) {
+    return [];
+  }
+}
+
+function buildGeminiTranscriptionPrompt(language) {
+  const languageNames = {
+    ja: '日本語',
+    en: '英語',
+    ko: '韓国語',
+    'zh-CN': '中国語(簡体字)',
+    'zh-TW': '中国語(繁体字)'
+  };
+  const hint = language && language !== 'auto' && languageNames[language]
+    ? `音声は主に${languageNames[language]}です。`
+    : '';
+  return (
+    'この音声を文字起こししてください。' +
+    hint +
+    '発話内容のテキストのみを出力し、説明・翻訳・注釈・記号による装飾は一切付けないでください。' +
+    '発話がない場合は何も出力しないでください。'
+  );
+}
+
+function extractGeminiText(result) {
+  const parts = result?.candidates?.[0]?.content?.parts;
+  if (!Array.isArray(parts)) return '';
+  return parts
+    .map((part) => String(part?.text || ''))
+    .join('')
+    .trim();
+}
+
+function blobToBase64(blob) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      // data:audio/webm;base64,xxxx の形式からbase64部分のみ取り出す
+      const dataUrl = String(reader.result || '');
+      resolve(dataUrl.slice(dataUrl.indexOf(',') + 1));
+    };
+    reader.onerror = () => reject(new Error('音声データのbase64変換に失敗しました'));
+    reader.readAsDataURL(blob);
+  });
 }
 
 function normalizeWhisperLanguage(language) {

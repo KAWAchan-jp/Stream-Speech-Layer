@@ -6,7 +6,7 @@
 
 YouTube / Twitch の配信タブ音声をリアルタイムに文字起こし・翻訳し、配信画面へそのまま字幕を重ねて表示する Chrome / Brave 向け Chromium 拡張です。ログ保存にも対応し、あとから見返せます。
 
-![version](https://img.shields.io/badge/version-0.2.0-1565c0)
+![version](https://img.shields.io/badge/version-0.2.5-1565c0)
 ![platform](https://img.shields.io/badge/platform-Chrome%20%7C%20Brave-4c8bf5)
 ![manifest](https://img.shields.io/badge/Manifest-v3-f59e0b)
 ![status](https://img.shields.io/badge/status-開発版-9a3412)
@@ -14,12 +14,12 @@ YouTube / Twitch の配信タブ音声をリアルタイムに文字起こし・
 ## 特長
 
 - 🎧 **タブ音声をそのまま認識** — マイクではなく配信タブの音声を直接取り込み
-- 📝 **リアルタイム文字起こし** — Groq Whisper API で高速に認識
+- 📝 **リアルタイム文字起こし** — Groq Whisper API / Gemini API で認識
 - 🌐 **その場で翻訳** — Google Translate / DeepL に対応
 - 🈶 **配信画面へ字幕オーバーレイ** — ドラッグ移動・サイズ変更・表示スタイルを自由に調整
 - 💾 **文字起こしログ保存** — 直近 50 件をローカルに記録
 - ⏰ **自動停止タイマー** — 指定時間で自動停止し、配信の流しっぱなしを防止
-- 🆓 **無料枠だけで実用** — Groq・DeepL の無料枠で日常利用が可能
+- 🆓 **無料枠だけで実用** — Groq・Gemini・DeepL の無料枠で日常利用が可能
 
 ## こんな人におすすめ
 
@@ -95,7 +95,7 @@ YouTube / Twitch の配信タブ音声をリアルタイムに文字起こし・
 - 現在の YouTube / Twitch タブ音声の取得
 - タブ音声の再出力
 - MediaRecorder による音声チャンク化
-- Groq Whisper API による音声認識
+- Groq Whisper API / Google AI Studio (Gemini API) による音声認識
 - Google Translate / DeepL API による翻訳
 - ページ上字幕オーバーレイ
 - 字幕オーバーレイのドラッグ移動と位置保存
@@ -105,7 +105,7 @@ YouTube / Twitch の配信タブ音声をリアルタイムに文字起こし・
 - 自動停止タイマー（1〜60 分で完全停止・残り時間をバッジ表示・最後 10 秒は秒読み）
 - 設定の項目ごとの保存（選択項目は自動保存、API キーは個別保存）
 - popup での最近の文字起こし表示
-- Groq / DeepL API キーの保存状態表示
+- Groq / Gemini / DeepL API キーの保存状態表示
 - Chrome / Brave 対応
 
 ## 設定
@@ -114,8 +114,11 @@ YouTube / Twitch の配信タブ音声をリアルタイムに文字起こし・
 
 - 未設定
 - Groq Whisper API
+- Google AI Studio (Gemini API)
 
 未設定の場合、音声チャンクの取得まで行い、外部の音声認識 API には送信しません。
+
+Gemini API は Groq に比べて応答速度が遅めです。まずは Groq を試し、上限に達した日の代替として Gemini を使う運用がおすすめです。
 
 ### 配信音声の言語
 
@@ -153,6 +156,7 @@ DeepL Pro API キーの場合、`:fx` は不要です。
 設定ページの各キー欄で保存・削除します。キー取得ページへのリンクも設定ページに用意しています。
 
 - Groq: <https://console.groq.com/keys>
+- Gemini: <https://aistudio.google.com/apikey>（無料・クレジットカード不要）
 - DeepL: <https://www.deepl.com/pro-api>（登録後、アカウント設定でキーを確認）
 
 ### 字幕パネルの表示
@@ -171,13 +175,15 @@ DeepL Pro API キーの場合、`:fx` は不要です。
 いずれも無料枠だけで日常的に使えます。
 
 - **Groq（音声認識）**: 無料枠でも配信内容にもよりますが 1 日あたりおおよそ 1〜2 時間ぶんの文字起こしに使えます（目安: 1 日 2,000 リクエスト / 1 時間あたり音声 7,200 秒）。上限は翌日リセットされます。
+- **Gemini（音声認識）**: 使用モデルは Gemini 3.1 Flash Lite。無料枠の上限はモデル・アカウントにより異なります（<https://aistudio.google.com/rate-limit> で確認できます）。日次上限に達すると送信を自動停止し、翌日リセットされます。Groq に比べて応答速度は遅めです。
 - **DeepL（翻訳）**: 無料枠（DeepL API Free）は月 50 万文字まで翻訳できます。字幕は 1 文が短いため通常は十分です。こちらは日次ではなく毎月リセットです。
 
 ## 上限エラー時の対処
 
 利用上限に達すると、字幕パネルの読み取りステータスに赤字で警告を表示します。
 
-- **Groq（音声認識）が上限**: ほかの認識エンジンが未実装のため、翌日のリセットまで待ちます。それまで文字起こしは止まります。
+- **Groq（音声認識）が上限**: 認識エンジンを Google AI Studio (Gemini API) に切り替えると、その日のうちに文字起こしを再開できます（応答速度は遅めです）。
+- **Gemini（音声認識）が上限**: 日次上限（RPD）に達すると以降のリクエスト送信を自動停止し、字幕パネルに案内を表示します。Groq に切り替えるか、翌日のリセットを待ちます。
 - **DeepL（翻訳）が上限**: 翻訳エンジンを Google Translate に切り替えます（翻訳精度は DeepL より落ちます）。
 
 ## 保存データ
@@ -208,6 +214,7 @@ DeepL Pro API キーの場合、`:fx` は不要です。
 選択した設定に応じて、以下の外部サービスへデータを送信します。
 
 - Groq Whisper API: 音声認識に使用
+- Google AI Studio (Gemini API): 音声認識に使用
 - Google Translate: 翻訳に使用
 - DeepL API: 翻訳に使用
 

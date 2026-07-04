@@ -238,12 +238,38 @@
     </div>
 
     <div class="recommend">
+      <h2>上限日の代替: Google AI Studio (Gemini API)</h2>
+      <p>Groq の無料枠を使い切った日でも、認識エンジンを切り替えれば文字起こしを続けられます。</p>
+      <ul>
+        <li>
+          <strong>Gemini（音声認識）</strong>: 使用モデルは <strong>Gemini 3.1 Flash Lite</strong>。
+          無料枠の上限（1 日あたりの回数など）はアカウントにより異なり、
+          <a href="https://aistudio.google.com/rate-limit" target="_blank" rel="noopener">aistudio.google.com/rate-limit</a>
+          で確認できます。日次上限に達すると送信を自動停止し、<strong>翌日リセット</strong>されます。
+          <span class="note">※応答速度は Groq より遅めです。</span>
+        </li>
+        <li>
+          キーの取得:
+          <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener">aistudio.google.com/apikey</a>
+          （無料・クレジットカード不要）
+        </li>
+      </ul>
+    </div>
+
+    <div class="recommend">
       <h2>上限エラーが出たときの対処</h2>
       <p>読み取りステータスに赤字の警告が出たら、以下を試してください。</p>
       <ul>
         <li>
-          <strong>Groq（音声認識）が上限</strong>: 現状ほかの認識エンジンが未実装のため、
-          <strong>翌日のリセットまで待つ</strong>しかありません。それまで文字起こしは止まります。
+          <strong>Groq（音声認識）が上限</strong>: 認識エンジンを
+          <strong>Google AI Studio (Gemini API) に切り替えて</strong>ください
+          （認識エンジンの選択を「Google AI Studio (Gemini API)」にして保存。事前に API キーの保存が必要です）。
+          <span class="note">※応答速度は Groq より遅めです。</span>
+        </li>
+        <li>
+          <strong>Gemini（音声認識）が上限</strong>: 日次上限（RPD）に達すると以降の送信は自動停止し、
+          読み取りステータスに案内が表示されます。<strong>Groq に切り替える</strong>か、
+          <strong>翌日のリセットを待って</strong>ください。
         </li>
         <li>
           <strong>DeepL（翻訳）が上限</strong>: 翻訳エンジンを
@@ -262,6 +288,7 @@
       <select id="provider">
         <option value="none">未設定</option>
         <option value="groq">Groq Whisper API</option>
+        <option value="gemini">Google AI Studio (Gemini API)</option>
       </select>
 
       <label for="language">配信音声の言語</label>
@@ -281,6 +308,20 @@
       <p class="hint">
         キーの取得:
         <a href="https://console.groq.com/keys" target="_blank" rel="noopener">console.groq.com/keys</a>
+      </p>
+
+      <label for="geminiKey">Gemini API キー</label>
+      <div class="inline-actions">
+        <input id="geminiKey" type="password" autocomplete="off" placeholder="新しいキーを入力" />
+        <button id="saveGeminiKey" type="button">保存</button>
+        <button id="clearGeminiKey" class="secondary" type="button">削除</button>
+      </div>
+      <div id="geminiKeyStatus" class="key-status empty">未保存</div>
+      <p class="hint">
+        キーの取得:
+        <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener">aistudio.google.com/apikey</a>
+        （無料・クレジットカード不要）<br />
+        無料枠の上限はモデル・アカウントにより異なります（<a href="https://aistudio.google.com/rate-limit" target="_blank" rel="noopener">rate-limit ページ</a>で確認できます）。Groq に比べて応答速度は遅めです。
       </p>
     </div>
 

@@ -25,8 +25,11 @@ MVP の動作確認は Groq Whisper API を使うと進めやすいが、長期�
 ```text
 未設定
 Groq Whisper API
+Google AI Studio (Gemini API)
 ローカル Whisper
 ```
+
+Gemini API は Groq と並ぶ選択肢として追加（詳細は [gemini-notes.md](./gemini-notes.md) を参照）。無料枠の上限はモデル・アカウントごとに大きく異なるため、必ず自分の [rate-limit ページ](https://aistudio.google.com/rate-limit) の実数値で確認する（旧世代モデルは極端に絞られている。現行世代の Flash Lite なら RPD に大きな余裕がある）。
 
 実装順の候補:
 

@@ -57,6 +57,27 @@
         font-weight: 700;
       }
 
+      .engines {
+        margin-top: 8px;
+        padding: 8px 10px;
+        border: 1px solid #e2e5ea;
+        border-radius: 8px;
+        background: #fafbfc;
+        font-size: 12px;
+        line-height: 1.6;
+        color: #374151;
+      }
+
+      .engines .engine-name {
+        font-weight: 700;
+        color: #1565c0;
+      }
+
+      .engines .engine-off {
+        font-weight: 700;
+        color: #9ca3af;
+      }
+
       .hint {
         margin-top: 6px;
         color: #5f6875;
@@ -137,6 +158,11 @@
     </div>
     <button id="toggle">開始する</button>
     <div id="status">停止中</div>
+
+    <div class="engines">
+      <div>🎙 認識: <span id="recognitionEngine">-</span></div>
+      <div>🌐 翻訳: <span id="translationEngine">-</span></div>
+    </div>
 
     <div id="timer" class="timer disabled">
       <div class="timer-head">

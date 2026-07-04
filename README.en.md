@@ -6,7 +6,7 @@
 
 A Chromium extension for Chrome / Brave that transcribes and translates the audio of a YouTube / Twitch stream tab in real time, and overlays the subtitles directly onto the stream. It also saves a log so you can look back later.
 
-![version](https://img.shields.io/badge/version-0.2.0-1565c0)
+![version](https://img.shields.io/badge/version-0.2.5-1565c0)
 ![platform](https://img.shields.io/badge/platform-Chrome%20%7C%20Brave-4c8bf5)
 ![manifest](https://img.shields.io/badge/Manifest-v3-f59e0b)
 ![status](https://img.shields.io/badge/status-development-9a3412)
@@ -14,12 +14,12 @@ A Chromium extension for Chrome / Brave that transcribes and translates the audi
 ## Features
 
 - 🎧 **Captures tab audio directly** — grabs the stream tab's audio itself, not your microphone
-- 📝 **Real-time transcription** — fast recognition via the Groq Whisper API
+- 📝 **Real-time transcription** — recognition via the Groq Whisper API / Gemini API
 - 🌐 **On-the-fly translation** — supports Google Translate / DeepL
 - 🈶 **Subtitle overlay on the stream** — freely drag, resize, and style the panel
 - 💾 **Transcription log** — keeps the latest 50 entries locally
 - ⏰ **Auto-stop timer** — stops automatically after a set time so a stream isn't left running
-- 🆓 **Practical on free tiers** — usable daily within the Groq and DeepL free tiers
+- 🆓 **Practical on free tiers** — usable daily within the Groq, Gemini, and DeepL free tiers
 
 ## Who it's for
 
@@ -95,7 +95,7 @@ Internally it uses `chrome.alarms` so it fires reliably even if the service work
 - Capturing audio from the current YouTube / Twitch tab
 - Re-outputting the tab audio
 - Chunking audio with MediaRecorder
-- Speech recognition via the Groq Whisper API
+- Speech recognition via the Groq Whisper API / Google AI Studio (Gemini API)
 - Translation via the Google Translate / DeepL API
 - On-page subtitle overlay
 - Dragging and position saving for the subtitle overlay
@@ -105,7 +105,7 @@ Internally it uses `chrome.alarms` so it fires reliably even if the service work
 - Auto-stop timer (fully stops after 1–60 minutes; remaining time shown on the badge; seconds countdown for the last 10 seconds)
 - Per-item settings saving (select items auto-save; API keys save individually)
 - Recent transcription display in the popup
-- Saved-state display for the Groq / DeepL API keys
+- Saved-state display for the Groq / Gemini / DeepL API keys
 - Chrome / Brave support
 
 ## Settings
@@ -114,8 +114,11 @@ Internally it uses `chrome.alarms` so it fires reliably even if the service work
 
 - Not set
 - Groq Whisper API
+- Google AI Studio (Gemini API)
 
 If not set, it goes as far as capturing audio chunks but does not send them to any external speech recognition API.
+
+The Gemini API responds more slowly than Groq. We recommend trying Groq first and using Gemini as a fallback on days when you hit the Groq limit.
 
 ### Stream audio language
 
@@ -153,6 +156,7 @@ For a DeepL Pro API key, `:fx` is not needed.
 Save and delete each key in its field on the settings page. Links to the key-issuing pages are also provided on the settings page.
 
 - Groq: <https://console.groq.com/keys>
+- Gemini: <https://aistudio.google.com/apikey> (free, no credit card required)
 - DeepL: <https://www.deepl.com/pro-api> (after registering, find your key in your account settings)
 
 ### Subtitle panel display
@@ -171,13 +175,15 @@ The panel can be moved by dragging its top bar and resized with the bottom-right
 Both can be used daily within their free tiers.
 
 - **Groq (speech recognition)**: Depending on the stream, the free tier is roughly enough for about 1–2 hours of transcription per day (estimate: 2,000 requests/day, 7,200 seconds of audio per hour). The limit resets the next day.
+- **Gemini (speech recognition)**: Uses the Gemini 3.1 Flash Lite model. Free-tier limits vary by model and account (check <https://aistudio.google.com/rate-limit>). When the daily limit is reached, requests stop automatically and reset the next day. Responses are slower than Groq.
 - **DeepL (translation)**: The free tier (DeepL API Free) allows up to 500,000 characters per month. Since subtitles are short sentences, this is usually plenty. This resets monthly rather than daily.
 
 ## Handling limit errors
 
 When a usage limit is reached, a red warning appears on the reading status of the subtitle panel.
 
-- **Groq (speech recognition) limit reached**: Since no other recognition engine is implemented, wait until it resets the next day. Transcription is paused until then.
+- **Groq (speech recognition) limit reached**: Switch the recognition engine to Google AI Studio (Gemini API) to resume transcription the same day (responses are slower).
+- **Gemini (speech recognition) limit reached**: When the daily limit (RPD) is reached, further requests stop automatically and a notice appears on the subtitle panel. Switch to Groq or wait for the next-day reset.
 - **DeepL (translation) limit reached**: The translation engine switches to Google Translate (translation quality is lower than DeepL).
 
 ## Stored data
@@ -208,6 +214,7 @@ Only after the user starts it does the extension capture the current stream tab'
 Depending on the selected settings, data is sent to the following external services:
 
 - Groq Whisper API: used for speech recognition
+- Google AI Studio (Gemini API): used for speech recognition
 - Google Translate: used for translation
 - DeepL API: used for translation
 

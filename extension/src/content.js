@@ -28,9 +28,17 @@ const DEFAULT_STYLE = {
 };
 
 let currentStyle = { ...DEFAULT_STYLE };
-let statusIsError = false;
+// 'info' | 'warn' | 'error'。重要なもの(error)は赤、警告程度(warn)はオレンジで表示する
+let statusLevel = 'info';
 
 const STATUS_ERROR_COLOR = '#ff5252';
+const STATUS_WARN_COLOR = '#ffb74d';
+
+function statusColorFor(level) {
+  if (level === 'error') return STATUS_ERROR_COLOR;
+  if (level === 'warn') return STATUS_WARN_COLOR;
+  return currentStyle.statusColor;
+}
 
 function applyStyle(style) {
   currentStyle = { ...DEFAULT_STYLE, ...(style || {}) };
@@ -40,8 +48,8 @@ function applyStyle(style) {
   }
   if (textNode) {
     textNode.style.fontSize = `${currentStyle.statusFontSize}px`;
-    textNode.style.color = statusIsError ? STATUS_ERROR_COLOR : currentStyle.statusColor;
-    textNode.style.fontWeight = statusIsError ? '700' : '';
+    textNode.style.color = statusColorFor(statusLevel);
+    textNode.style.fontWeight = statusLevel !== 'info' ? '700' : '';
     textNode.style.display = currentStyle.statusVisible ? '' : 'none';
   }
   if (lastTranscriptNode) {
@@ -325,14 +333,14 @@ function removeOverlay() {
   resizeState = null;
 }
 
-function setStatus(text, isError = false) {
+function setStatus(text, level = 'info') {
   if (!isEnabled) return;
   createOverlay();
-  statusIsError = Boolean(isError);
+  statusLevel = level === 'error' || level === 'warn' ? level : 'info';
   if (textNode) {
     textNode.textContent = text || '';
-    textNode.style.color = statusIsError ? STATUS_ERROR_COLOR : currentStyle.statusColor;
-    textNode.style.fontWeight = statusIsError ? '700' : '';
+    textNode.style.color = statusColorFor(statusLevel);
+    textNode.style.fontWeight = statusLevel !== 'info' ? '700' : '';
   }
 }
 
@@ -387,7 +395,8 @@ chrome.runtime.onMessage.addListener((message) => {
   }
 
   if (message.type === 'stream-status') {
-    setStatus(message.text || '', message.isError);
+    // 旧形式(isError)からの互換: level未指定でisError=trueなら赤扱い
+    setStatus(message.text || '', message.level || (message.isError ? 'error' : 'info'));
   }
 
   if (message.type === 'transcript-update') {
