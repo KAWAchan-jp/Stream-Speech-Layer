@@ -16,17 +16,18 @@ let chunkTimer = null;
 let maxLevel = 0;
 let hadSpeech = false;
 
-function sendStatus(text, isError = false) {
-  chrome.runtime.sendMessage({ type: 'capture-status', text, isError }).catch(() => {});
+// level: 'info'(通常) | 'warn'(オレンジ) | 'error'(赤)
+function sendStatus(text, level = 'info') {
+  chrome.runtime.sendMessage({ type: 'capture-status', text, level }).catch(() => {});
 }
 
 // 認識エラーを読み取りステータス向けの警告文に変換して通知する
 function reportTranscribeError(error) {
   const message = error?.message || String(error);
   if (/\b429\b/.test(message)) {
-    sendStatus('⚠ Groqの利用上限に達しました。翌日のリセットまでお待ちください', true);
+    sendStatus('⚠ Groqの利用上限に達しました。翌日のリセットまでお待ちください', 'error');
   } else {
-    sendStatus(`認識エラー: ${message}`, true);
+    sendStatus(`認識エラー: ${message}`, 'error');
   }
 }
 
@@ -141,7 +142,7 @@ async function transcribeChunk(blob, mimeType) {
     geminiApiKey: captureSettings.geminiApiKey || ''
   });
 
-  if (result.status) sendStatus(result.status);
+  if (result.status) sendStatus(result.status, result.level);
   if (!result.text) return;
 
   await chrome.runtime.sendMessage({

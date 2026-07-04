@@ -18,19 +18,20 @@ export function resetGeminiDailyLimitFlag() {
 export async function transcribeAudioChunk({ blob, mimeType, language, provider, groqApiKey, geminiApiKey }) {
   if (provider === 'groq') {
     if (!groqApiKey) {
-      return { text: '', status: 'Groq API キーが未設定です' };
+      return { text: '', status: 'Groq API キーが未設定です', level: 'error' };
     }
     return transcribeWithGroq({ blob, mimeType, language, apiKey: groqApiKey });
   }
 
   if (provider === 'gemini') {
     if (!geminiApiKey) {
-      return { text: '', status: 'Gemini API キーが未設定です' };
+      return { text: '', status: 'Gemini API キーが未設定です', level: 'error' };
     }
     if (geminiDailyLimitReached) {
       return {
         text: '',
-        status: '本日のGemini無料枠(RPD)の上限に達した可能性があります。エンジンを切り替えるか翌日にご利用ください'
+        status: '本日のGemini無料枠(RPD)の上限に達しました。エンジンを切り替えるか翌日にご利用ください',
+        level: 'error'
       };
     }
     return transcribeWithGemini({ blob, mimeType, language, apiKey: geminiApiKey });
@@ -69,7 +70,7 @@ async function transcribeWithGroq({ blob, mimeType, language, apiKey }) {
   const text = String(result.text || '').trim();
 
   if (isLikelyHallucination(text)) {
-    return { text: '', status: 'ハルシネーションらしい認識結果を破棄しました' };
+    return { text: '', status: 'ハルシネーションらしい認識結果を破棄しました', level: 'warn' };
   }
 
   return { text, status: text ? '認識結果を保存しました' : '認識結果は空でした' };
@@ -109,7 +110,7 @@ async function transcribeWithGemini({ blob, mimeType, language, apiKey }) {
   const text = extractGeminiText(result);
 
   if (isLikelyHallucination(text)) {
-    return { text: '', status: 'ハルシネーションらしい認識結果を破棄しました' };
+    return { text: '', status: 'ハルシネーションらしい認識結果を破棄しました', level: 'warn' };
   }
 
   return { text, status: text ? '認識結果を保存しました' : '認識結果は空でした' };
@@ -131,10 +132,11 @@ async function handleGeminiRateLimit(response) {
     const limit = daily.quotaValue ? `1日${daily.quotaValue}回` : 'RPD';
     return {
       text: '',
-      status: `本日のGemini無料枠(${limit})の上限に達しました。エンジンを切り替えるか翌日にご利用ください`
+      status: `本日のGemini無料枠(${limit})の上限に達しました。エンジンを切り替えるか翌日にご利用ください`,
+      level: 'error'
     };
   }
-  return { text: '', status: '一時的なレート制限のためスキップしました' };
+  return { text: '', status: '一時的なレート制限のためスキップしました', level: 'warn' };
 }
 
 // エラーボディJSONから QuotaFailure の violations 配列を取り出す（無ければ空配列）

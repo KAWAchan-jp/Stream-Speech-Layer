@@ -259,7 +259,8 @@ async function appendTranscript(text, meta = {}) {
   const result = await storageGet(['transcriptLog']);
   const translatedText = await translateTranscriptIfNeeded(text).catch((error) => {
     if (activeSession?.tabId) {
-      sendToTab(activeSession.tabId, { type: 'stream-status', text: describeTranslationError(error), isError: true });
+      // 翻訳は認識と違いGoogle翻訳への切替で継続できるため警告(オレンジ)扱い
+      sendToTab(activeSession.tabId, { type: 'stream-status', text: describeTranslationError(error), level: 'warn' });
     }
     return '';
   });
@@ -560,7 +561,12 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 
   if (message.type === 'capture-status') {
     if (activeSession?.tabId) {
-      sendToTab(activeSession.tabId, { type: 'stream-status', text: message.text, isError: Boolean(message.isError) });
+      sendToTab(activeSession.tabId, {
+        type: 'stream-status',
+        text: message.text,
+        // level('info'|'warn'|'error')を優先し、旧形式のisErrorはerror扱いで中継する
+        level: message.level || (message.isError ? 'error' : 'info')
+      });
     }
     sendResponse({ ok: true });
     return true;
