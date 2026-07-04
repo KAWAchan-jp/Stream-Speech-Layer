@@ -25,8 +25,11 @@ MVP の動作確認は Groq Whisper API を使うと進めやすいが、長期�
 ```text
 未設定
 Groq Whisper API
+Google AI Studio (Gemini API)
 ローカル Whisper
 ```
+
+Gemini API は Groq と並ぶ選択肢として追加（詳細は [gemini-notes.md](./gemini-notes.md) を参照）。無料枠はモデルにより異なるが、実質的なボトルネックは RPM（分あたりリクエスト数）よりも RPD（1日あたりリクエスト数、無料枠で1,500）で、チャンク間隔6秒（10 req/分）運用だと連続認識できるのは1日あたり約2時間30分が目安。長時間配信の完全カバーにはローカル Whisper か Groq への切り替えが引き続き必要。
 
 実装順の候補:
 
