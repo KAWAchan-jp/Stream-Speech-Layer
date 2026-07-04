@@ -432,7 +432,9 @@ function normalizeGoogleLanguage(language) {
 async function translateWithDeepL(text, from, to, apiKey) {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), 8000);
-  const host = apiKey.endsWith(':fx') ? 'api-free.deepl.com' : 'api.deepl.com';
+  const isFreeApiKey = apiKey.endsWith(':fx');
+  const host = isFreeApiKey ? 'api-free.deepl.com' : 'api.deepl.com';
+  const authKey = isFreeApiKey ? apiKey.slice(0, -3) : apiKey;
   const targetLang = normalizeDeepLTargetLanguage(to);
   const sourceLang = from === 'auto' ? '' : normalizeDeepLSourceLanguage(from);
 
@@ -443,7 +445,7 @@ async function translateWithDeepL(text, from, to, apiKey) {
     const response = await fetch(`https://${host}/v2/translate`, {
       method: 'POST',
       headers: {
-        Authorization: `DeepL-Auth-Key ${apiKey}`,
+        Authorization: `DeepL-Auth-Key ${authKey}`,
         'Content-Type': 'application/x-www-form-urlencoded'
       },
       body,

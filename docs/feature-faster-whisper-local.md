@@ -21,7 +21,7 @@ Groq Whisper API / Gemini API に加えて、ユーザー自身の PC 上で動�
 
 - `uv/server.py` / `uv/requirements.txt` / `uv/README.md`: Faster-Whisper ローカルサーバー本体。参考実装からロジックを移植（PEP 723 で `uv run server.py` 起動、起動時モデル事前ロード、GPU 初期化失敗時の CPU 自動フォールバック、pip 版 NVIDIA ライブラリの DLL 自動検出）。
 - `.gitignore`: `uv/.venv/` と `uv/__pycache__/` を除外。
-- `extension/manifest.json`: `host_permissions` に `http://127.0.0.1/*` / `http://localhost/*` を追加。バージョンを `0.2.7` へ更新。
+- `extension/manifest.json`: `host_permissions` に `http://127.0.0.1/*` / `http://localhost/*` を追加。開発版リリースの最終バージョンは `0.3.0`。
 - `extension/src/transcription/transcriber.js`: `transcribeWithFasterWhisper()` を追加。`localhost` / `127.0.0.1` 以外への送信を拒否。30秒タイムアウト（サーバー起動直後のモデル読み込み待ちを考慮）。
 - `extension/src/background.js`: `fasterWhisperUrl`（既定 `http://127.0.0.1:8765/transcribe`）/ `fasterWhisperModel`（既定 `large-v3-turbo`）を設定項目に追加（`onInstalled` の初期値・`startCapture` の設定収集・`getState`・`saveSettings`）。
 - `extension/src/offscreen/offscreen.js`: `captureSettings` から `fasterWhisperUrl` / `fasterWhisperModel` を `transcribeAudioChunk()` へ渡す。
@@ -43,5 +43,5 @@ Groq Whisper API / Gemini API に加えて、ユーザー自身の PC 上で動�
 
 ## 未確認事項
 
-- なし。`develop` へマージ済み（v0.2.8）。
+- なし。`develop` へマージ済み。開発版 `v0.3.0` としてリリース対象。
 - 参考: 実際の配信タブでの文字起こし精度・レイテンシの評価は継続的な利用の中で確認していく。

@@ -7,7 +7,7 @@
 - 新しいブランチで作業を始めたら、このファイルに欄を追加する
 - ブランチ作業の詳細（目的・実装方針・変更内容・検証結果・未確認事項）は
   `docs/feature-<ブランチ名>.md` に残す運用（`CLAUDE.md` 参照）。ここには要点とリンクだけを書く
-- 最終更新: 2026-07-05 / by Claude Code
+- 最終更新: 2026-07-05 / by Codex
 
 ---
 
@@ -24,9 +24,9 @@
 - 次の予定: 追加作業なし。マージ後にブランチは削除。
 
 ### develop — 統合用（共有）
-- バージョンは `extension/manifest.json` の `version` で管理（3桁目インクリメント方式）。現在 **0.2.8**
+- バージョンは `extension/manifest.json` の `version` で管理。現在 **0.3.0**
   （`feature/faster-whisper-local` マージ済み）。
-- 直近: ローカル Faster-Whisper 認識エンジン対応（v0.2.8）まで統合済み。
+- 直近: ローカル Faster-Whisper 認識エンジン対応を開発版 `v0.3.0` としてリリース準備完了。
 
 ### master — 本番。直接作業しない。
 
@@ -34,6 +34,19 @@
 
 ## 申し送り（時系列・新しい順）
 
+- **2026-07-05 Codex**: 開発版 `v0.3.0` の静的検証と配布ZIP作成を完了。
+  `node --check`、`manifest.json` JSON妥当性、`uv/server.py` py_compile を通過。
+  `dist/stream-speech-layer-v0.3.0.zip` と `dist/stream-speech-layer-uv-faster-whisper-v0.3.0.zip` を作成済み。
+- **2026-07-05 Codex**: 開発版リリース準備としてバージョンを `0.3.0` に更新。
+  README バッジ、作業記録、DeepL Free API キー末尾 `:fx` の送信前除去も修正対象に含める。
+- **2026-07-05 Codex**: `extension/src/ui/options.html` の上部説明カードに
+  Faster-Whisper（ローカル認識）の案内を追加。API キー不要・外部送信なし・ローカルサーバー起動必須・GPU推奨/CPUはsmall推奨を明記。
+- **2026-07-05 Codex**: develop の現状確認を実施。`node --check`（background/content/offscreen/transcriber/options/popup）、
+  `python3 -m json.tool extension/manifest.json`、`python3 -m py_compile uv/server.py` は通過。
+  Windows PowerShell 経由で `scripts/build-release.ps1` / `scripts/build-uv-release.ps1` を実行し、
+  `stream-speech-layer-v0.2.8.zip` と `stream-speech-layer-uv-faster-whisper-v0.2.8.zip` の作成も確認。
+  ただし DeepL Free 用の `:fx` が Authorization ヘッダーにも付いたまま送信される可能性、
+  README / README.en の version badge が `0.2.7` のまま、`docs/feature-faster-whisper-local.md` に v0.2.7 の古い記述が残る点を検出。
 - **2026-07-05 Claude Code**: `feature/faster-whisper-local` を `develop` へマージ（v0.2.8）。
   ユーザーの実機テストで、popup の `RECOGNITION_ENGINE_LABELS` に `faster-whisper` が未登録のため
   認識エンジンが「未設定」と表示されるバグが発覚し、修正した。マージ後にブランチは削除済み。

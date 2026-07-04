@@ -257,6 +257,22 @@
     </div>
 
     <div class="recommend">
+      <h2>ローカル認識: Faster-Whisper</h2>
+      <p>自分の PC 上で動く Faster-Whisper サーバーへ音声を送り、外部 API を使わずに文字起こしできます。</p>
+      <ul>
+        <li>
+          <strong>API キー不要・外部送信なし</strong>: 音声は <code>localhost</code> /
+          <code>127.0.0.1</code> のローカルサーバーにだけ送信されます。無料枠の回数制限もありません。
+        </li>
+        <li>
+          <strong>別途サーバー起動が必要</strong>: 配布 ZIP または本リポジトリの
+          <code>uv/README.md</code> を参照し、<code>uv/</code> フォルダで Faster-Whisper サーバーを起動してください。
+          <span class="note">※GPU（NVIDIA・CUDA対応）推奨です。CPU のみの場合は small モデルを選んでください。</span>
+        </li>
+      </ul>
+    </div>
+
+    <div class="recommend">
       <h2>上限エラーが出たときの対処</h2>
       <p>読み取りステータスに赤字の警告が出たら、以下を試してください。</p>
       <ul>
