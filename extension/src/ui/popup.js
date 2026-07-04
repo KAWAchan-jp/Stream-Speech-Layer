@@ -2,6 +2,8 @@
 
 const toggleButton = document.getElementById('toggle');
 const statusEl = document.getElementById('status');
+const recognitionEngineEl = document.getElementById('recognitionEngine');
+const translationEngineEl = document.getElementById('translationEngine');
 const targetEl = document.getElementById('target');
 const logEl = document.getElementById('log');
 const openOptionsButton = document.getElementById('openOptions');
@@ -12,6 +14,32 @@ const timerValueEl = document.getElementById('timerValue');
 const timerCountdownEl = document.getElementById('timerCountdown');
 
 let countdownInterval = null;
+
+const RECOGNITION_ENGINE_LABELS = {
+  groq: 'Groq Whisper API',
+  gemini: 'Google AI Studio (Gemini API)'
+};
+
+const TRANSLATION_ENGINE_LABELS = {
+  google: 'Google Translate',
+  deepl: 'DeepL API'
+};
+
+// 現在選択中の認識・翻訳エンジンを表示する（未設定・翻訳オフはグレー表示）
+function renderEngines(state) {
+  const recognitionLabel = RECOGNITION_ENGINE_LABELS[state.transcriptionProvider];
+  recognitionEngineEl.textContent = recognitionLabel || '未設定';
+  recognitionEngineEl.className = recognitionLabel ? 'engine-name' : 'engine-off';
+
+  if (state.translationEnabled) {
+    const translationLabel = TRANSLATION_ENGINE_LABELS[state.translationProvider] || 'Google Translate';
+    translationEngineEl.textContent = translationLabel;
+    translationEngineEl.className = 'engine-name';
+  } else {
+    translationEngineEl.textContent = 'オフ';
+    translationEngineEl.className = 'engine-off';
+  }
+}
 
 function stopCountdown() {
   if (countdownInterval) {
@@ -77,6 +105,7 @@ async function refreshState() {
   toggleButton.textContent = isEnabled ? '停止する' : '開始する';
 
   renderTimer(response);
+  renderEngines(response);
 
   targetEl.textContent = response.activeTitle
     ? `対象: ${response.activeTitle}`
