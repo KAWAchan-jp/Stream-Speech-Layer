@@ -1,6 +1,7 @@
 # Local-only files and agent customization notes
 .agent.md
 CLAUDE.md
+AGENTS.md
 .github/
 
 # General local artifacts
