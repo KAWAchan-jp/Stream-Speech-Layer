@@ -6,7 +6,7 @@
 
 A Chromium extension for Chrome / Brave that transcribes and translates the audio of a YouTube / Twitch stream tab in real time, and overlays the subtitles directly onto the stream. It also saves a log so you can look back later.
 
-![version](https://img.shields.io/badge/version-0.2.5-1565c0)
+![version](https://img.shields.io/badge/version-0.2.6-1565c0)
 ![platform](https://img.shields.io/badge/platform-Chrome%20%7C%20Brave-4c8bf5)
 ![manifest](https://img.shields.io/badge/Manifest-v3-f59e0b)
 ![status](https://img.shields.io/badge/status-development-9a3412)
@@ -15,7 +15,7 @@ A Chromium extension for Chrome / Brave that transcribes and translates the audi
 
 - 🎧 **Captures tab audio directly** — grabs the stream tab's audio itself, not your microphone
 - 📝 **Real-time transcription** — recognition via the Groq Whisper API / Gemini API
-- 🌐 **On-the-fly translation** — supports Google Translate / DeepL
+- 🌐 **On-the-fly translation** — supports Google Translate / DeepL / Gemini API
 - 🈶 **Subtitle overlay on the stream** — freely drag, resize, and style the panel
 - 💾 **Transcription log** — keeps the latest 50 entries locally
 - ⏰ **Auto-stop timer** — stops automatically after a set time so a stream isn't left running
@@ -96,7 +96,7 @@ Internally it uses `chrome.alarms` so it fires reliably even if the service work
 - Re-outputting the tab audio
 - Chunking audio with MediaRecorder
 - Speech recognition via the Groq Whisper API / Google AI Studio (Gemini API)
-- Translation via the Google Translate / DeepL API
+- Translation via the Google Translate / DeepL API / Google AI Studio (Gemini API)
 - On-page subtitle overlay
 - Dragging and position saving for the subtitle overlay
 - Resizing via the bottom-right handle and size saving for the subtitle overlay
@@ -142,6 +142,9 @@ Translation engines:
 
 - Google Translate
 - DeepL API
+- Google AI Studio (Gemini API)
+
+When both the recognition engine and translation engine are set to Gemini, the extension internally performs transcription and translation in a single Gemini API request. Gemini recognition and translation share the same project quota.
 
 If you use a DeepL Free API key, append `:fx` to the end of the key when saving.
 
@@ -175,7 +178,7 @@ The panel can be moved by dragging its top bar and resized with the bottom-right
 Both can be used daily within their free tiers.
 
 - **Groq (speech recognition)**: Depending on the stream, the free tier is roughly enough for about 1–2 hours of transcription per day (estimate: 2,000 requests/day, 7,200 seconds of audio per hour). The limit resets the next day.
-- **Gemini (speech recognition)**: Uses the Gemini 3.1 Flash Lite model. Free-tier limits vary by model and account (check <https://aistudio.google.com/rate-limit>). When the daily limit is reached, requests stop automatically and reset the next day. Responses are slower than Groq.
+- **Gemini (speech recognition / translation)**: Uses the Gemini 3.1 Flash Lite model. Free-tier limits vary by model and account (check <https://aistudio.google.com/rate-limit>). When the daily limit is reached, requests stop automatically and reset the next day. Responses are slower than Groq. When Gemini is used for both recognition and translation, both are handled in the same request.
 - **DeepL (translation)**: The free tier (DeepL API Free) allows up to 500,000 characters per month. Since subtitles are short sentences, this is usually plenty. This resets monthly rather than daily.
 
 ## Handling limit errors
@@ -183,7 +186,7 @@ Both can be used daily within their free tiers.
 When a usage limit is reached, a red warning appears on the reading status of the subtitle panel.
 
 - **Groq (speech recognition) limit reached**: Switch the recognition engine to Google AI Studio (Gemini API) to resume transcription the same day (responses are slower).
-- **Gemini (speech recognition) limit reached**: When the daily limit (RPD) is reached, further requests stop automatically and a notice appears on the subtitle panel. Switch to Groq or wait for the next-day reset.
+- **Gemini (speech recognition / translation) limit reached**: When the daily limit (RPD) is reached, further requests stop automatically and a notice appears on the subtitle panel. Switch to Groq or Google Translate / DeepL, or wait for the next-day reset.
 - **DeepL (translation) limit reached**: The translation engine switches to Google Translate (translation quality is lower than DeepL).
 
 ## Stored data
@@ -214,7 +217,7 @@ Only after the user starts it does the extension capture the current stream tab'
 Depending on the selected settings, data is sent to the following external services:
 
 - Groq Whisper API: used for speech recognition
-- Google AI Studio (Gemini API): used for speech recognition
+- Google AI Studio (Gemini API): used for speech recognition and translation
 - Google Translate: used for translation
 - DeepL API: used for translation
 

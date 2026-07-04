@@ -44,11 +44,12 @@
 - 実機での動作確認（拡張再読み込み → Gemini キー保存 → YouTube/Twitch で認識）: ✅ v0.2.5（`gemini-3.1-flash-lite`）で動作確認済み（2026-07-04）
 - 429 の RPM/RPD 判別: ✅ 実機の429エラーボディ（RPD超過）で検知・自動停止が動作することを確認。模擬ボディでの誤検知回帰テストも実施（v0.2.3）
 
-## 追記（v0.2.2〜v0.2.5）
+## 追記（v0.2.2〜v0.2.6）
 - v0.2.2: popup に現在の認識・翻訳エンジンを表示
 - v0.2.3: 429 の RPD 判定をボディ全体の文字列一致から `QuotaFailure.violations[].quotaId` の判別に修正（説明文中の "per day" への誤反応を解消）。429 の生ボディをコンソールへ記録
 - v0.2.4: ステータスメッセージを重要度で色分け（error=赤 / warn=オレンジ / info=通常色）。level を transcriber → offscreen → background → content の全経路に追加
 - v0.2.5: 実測で `gemini-2.5-flash-lite` の無料枠が **RPD 20回/日** しかないことが判明（当初見積の1,500は誤り）。使用モデルを現行世代の `gemini-3.1-flash-lite`（RPD 150K）に変更し、ドキュメントの無料枠記述を「rate-limit ページで要確認」に修正
+- v0.2.6: 翻訳エンジンに Gemini API を追加。認識エンジンと翻訳エンジンの両方が Gemini の場合は、音声チャンク1つにつき1回の Gemini API 呼び出しで文字起こしと翻訳をまとめて行う
 
 ## 使い方（動作確認手順）
 1. `chrome://extensions/` で拡張を再読み込み

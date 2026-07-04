@@ -22,7 +22,8 @@ const RECOGNITION_ENGINE_LABELS = {
 
 const TRANSLATION_ENGINE_LABELS = {
   google: 'Google Translate',
-  deepl: 'DeepL API'
+  deepl: 'DeepL API',
+  gemini: 'Google AI Studio (Gemini API)'
 };
 
 // 現在選択中の認識・翻訳エンジンを表示する（未設定・翻訳オフはグレー表示）

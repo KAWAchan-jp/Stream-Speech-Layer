@@ -139,7 +139,10 @@ async function transcribeChunk(blob, mimeType) {
     language: captureSettings.sourceLanguage || 'ja',
     provider: captureSettings.transcriptionProvider || 'none',
     groqApiKey: captureSettings.groqApiKey || '',
-    geminiApiKey: captureSettings.geminiApiKey || ''
+    geminiApiKey: captureSettings.geminiApiKey || '',
+    translationEnabled: Boolean(captureSettings.translationEnabled),
+    translationProvider: captureSettings.translationProvider || 'google',
+    targetLanguage: captureSettings.targetLanguage || 'ja'
   });
 
   if (result.status) sendStatus(result.status, result.level);
@@ -148,6 +151,8 @@ async function transcribeChunk(blob, mimeType) {
   await chrome.runtime.sendMessage({
     type: 'transcript',
     text: result.text,
+    translatedText: result.translatedText || '',
+    translationHandled: Boolean(result.translationHandled),
     meta: currentMeta
   });
 }

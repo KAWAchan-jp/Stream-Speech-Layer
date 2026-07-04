@@ -16,7 +16,17 @@ export function resetGeminiDailyLimitFlag() {
   geminiDailyLimitReached = false;
 }
 
-export async function transcribeAudioChunk({ blob, mimeType, language, provider, groqApiKey, geminiApiKey }) {
+export async function transcribeAudioChunk({
+  blob,
+  mimeType,
+  language,
+  provider,
+  groqApiKey,
+  geminiApiKey,
+  translationEnabled,
+  translationProvider,
+  targetLanguage
+}) {
   if (provider === 'groq') {
     if (!groqApiKey) {
       return { text: '', status: 'Groq API キーが未設定です', level: 'error' };
@@ -35,7 +45,14 @@ export async function transcribeAudioChunk({ blob, mimeType, language, provider,
         level: 'error'
       };
     }
-    return transcribeWithGemini({ blob, mimeType, language, apiKey: geminiApiKey });
+    return transcribeWithGemini({
+      blob,
+      mimeType,
+      language,
+      apiKey: geminiApiKey,
+      translate: shouldTranslateWithGemini({ language, translationEnabled, translationProvider, targetLanguage }),
+      targetLanguage
+    });
   }
 
   return {
@@ -77,7 +94,7 @@ async function transcribeWithGroq({ blob, mimeType, language, apiKey }) {
   return { text, status: text ? '認識結果を保存しました' : '認識結果は空でした' };
 }
 
-async function transcribeWithGemini({ blob, mimeType, language, apiKey }) {
+async function transcribeWithGemini({ blob, mimeType, language, apiKey, translate, targetLanguage }) {
   const fileType = normalizeMimeType(mimeType || blob.type);
   const base64Audio = await blobToBase64(blob);
 
@@ -88,7 +105,7 @@ async function transcribeWithGemini({ blob, mimeType, language, apiKey }) {
       contents: [
         {
           parts: [
-            { text: buildGeminiTranscriptionPrompt(language) },
+            { text: buildGeminiTranscriptionPrompt(language, translate ? targetLanguage : '') },
             { inline_data: { mime_type: fileType, data: base64Audio } }
           ]
         }
@@ -108,13 +125,20 @@ async function transcribeWithGemini({ blob, mimeType, language, apiKey }) {
   }
 
   const result = await response.json();
-  const text = extractGeminiText(result);
+  const rawText = extractGeminiText(result);
+  const payload = translate ? parseGeminiTranscriptPayload(rawText) : { transcript: rawText, translation: '' };
+  const text = payload.transcript;
 
   if (isLikelyHallucination(text)) {
     return { text: '', status: 'ハルシネーションらしい認識結果を破棄しました', level: 'warn' };
   }
 
-  return { text, status: text ? '認識結果を保存しました' : '認識結果は空でした' };
+  return {
+    text,
+    translatedText: payload.translation,
+    translationHandled: Boolean(translate && payload.parsed),
+    status: text ? '認識結果を保存しました' : '認識結果は空でした'
+  };
 }
 
 // 429のエラーボディからRPM(一時的)かRPD(日次上限)かを判別する。
@@ -151,7 +175,7 @@ function extractGeminiQuotaViolations(body) {
   }
 }
 
-function buildGeminiTranscriptionPrompt(language) {
+function buildGeminiTranscriptionPrompt(language, targetLanguage) {
   const languageNames = {
     ja: '日本語',
     en: '英語',
@@ -162,12 +186,59 @@ function buildGeminiTranscriptionPrompt(language) {
   const hint = language && language !== 'auto' && languageNames[language]
     ? `音声は主に${languageNames[language]}です。`
     : '';
+  if (targetLanguage) {
+    const target = languageNames[targetLanguage] || targetLanguage;
+    return (
+      'この音声を文字起こしし、指定された言語へ翻訳してください。' +
+      hint +
+      `翻訳先は${target}です。` +
+      '出力はJSONのみとし、Markdown・説明・注釈・コードブロックは付けないでください。' +
+      '形式は {"transcript":"音声の文字起こし","translation":"翻訳結果"} です。' +
+      '発話がない場合は {"transcript":"","translation":""} を出力してください。'
+    );
+  }
   return (
     'この音声を文字起こししてください。' +
     hint +
     '発話内容のテキストのみを出力し、説明・翻訳・注釈・記号による装飾は一切付けないでください。' +
     '発話がない場合は何も出力しないでください。'
   );
+}
+
+function shouldTranslateWithGemini({ language, translationEnabled, translationProvider, targetLanguage }) {
+  if (!translationEnabled || translationProvider !== 'gemini' || !targetLanguage) return false;
+  return language === 'auto' || language !== targetLanguage;
+}
+
+function parseGeminiTranscriptPayload(rawText) {
+  const text = String(rawText || '').trim();
+  if (!text) return { transcript: '', translation: '', parsed: true };
+
+  const jsonText = extractJsonObject(stripCodeFence(text));
+  try {
+    const data = JSON.parse(jsonText);
+    return {
+      transcript: String(data?.transcript || '').trim(),
+      translation: String(data?.translation || '').trim(),
+      parsed: true
+    };
+  } catch (_) {
+    return { transcript: text, translation: '', parsed: false };
+  }
+}
+
+function stripCodeFence(text) {
+  return text
+    .replace(/^```(?:json)?\s*/i, '')
+    .replace(/\s*```$/i, '')
+    .trim();
+}
+
+function extractJsonObject(text) {
+  const start = text.indexOf('{');
+  const end = text.lastIndexOf('}');
+  if (start === -1 || end === -1 || end <= start) return text;
+  return text.slice(start, end + 1);
 }
 
 function extractGeminiText(result) {

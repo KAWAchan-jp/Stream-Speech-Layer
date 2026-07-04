@@ -3,6 +3,8 @@
 const OFFSCREEN_DOCUMENT_PATH = 'src/offscreen/offscreen.html';
 const SUPPORTED_URL_PATTERN = /^https:\/\/(www\.)?(youtube\.com|twitch\.tv)\//;
 const TRANSLATION_CACHE_MAX = 300;
+const GEMINI_MODEL = 'gemini-3.1-flash-lite';
+const GEMINI_TRANSLATION_URL = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent`;
 const AUTO_STOP_ALARM = 'auto-stop';
 const AUTO_STOP_TICK = 'auto-stop-tick';
 const AUTO_STOP_FINAL = 'auto-stop-final';
@@ -126,6 +128,9 @@ async function startCapture(tab) {
     'groqApiKey',
     'geminiApiKey',
     'sourceLanguage',
+    'translationEnabled',
+    'translationProvider',
+    'targetLanguage',
     'chunkMillis',
     'vadThreshold',
     'silenceMillis'
@@ -257,13 +262,15 @@ chrome.alarms.onAlarm.addListener((alarm) => {
 
 async function appendTranscript(text, meta = {}) {
   const result = await storageGet(['transcriptLog']);
-  const translatedText = await translateTranscriptIfNeeded(text).catch((error) => {
-    if (activeSession?.tabId) {
-      // 翻訳は認識と違いGoogle翻訳への切替で継続できるため警告(オレンジ)扱い
-      sendToTab(activeSession.tabId, { type: 'stream-status', text: describeTranslationError(error), level: 'warn' });
-    }
-    return '';
-  });
+  const translatedText = meta.translationHandled
+    ? String(meta.translatedText || '')
+    : await translateTranscriptIfNeeded(text).catch((error) => {
+      if (activeSession?.tabId) {
+        // 翻訳は認識と違いGoogle翻訳への切替で継続できるため警告(オレンジ)扱い
+        sendToTab(activeSession.tabId, { type: 'stream-status', text: describeTranslationError(error), level: 'warn' });
+      }
+      return '';
+    });
   const log = Array.isArray(result.transcriptLog) ? result.transcriptLog : [];
   const entry = {
     text,
@@ -284,6 +291,9 @@ function describeTranslationError(error) {
   if (/DeepL/i.test(message) && /\b456\b/.test(message)) {
     return '⚠ DeepLの月間上限に達しました。翻訳エンジンをGoogleに切り替えてください（精度は低下します）';
   }
+  if (/Gemini/i.test(message) && /\b429\b/.test(message)) {
+    return '⚠ Geminiの利用上限に達しました。翻訳エンジンをGoogleまたはDeepLに切り替えるか、時間をおいて再試行してください';
+  }
   if (/\b429\b/.test(message) || /\b456\b/.test(message)) {
     return '⚠ 翻訳の利用上限に達しました。翻訳エンジンをGoogleに切り替えるか、時間をおいて再試行してください';
   }
@@ -298,7 +308,8 @@ async function translateTranscriptIfNeeded(text) {
     'translationProvider',
     'sourceLanguage',
     'targetLanguage',
-    'deeplApiKey'
+    'deeplApiKey',
+    'geminiApiKey'
   ]);
 
   if (!settings.translationEnabled) return '';
@@ -318,6 +329,9 @@ async function translateTranscriptIfNeeded(text) {
   } else if (provider === 'deepl') {
     if (!settings.deeplApiKey) throw new Error('DeepL API キーが未設定です');
     translatedText = await translateWithDeepL(text, from, to, settings.deeplApiKey);
+  } else if (provider === 'gemini') {
+    if (!settings.geminiApiKey) throw new Error('Gemini API キーが未設定です');
+    translatedText = await translateWithGemini(text, from, to, settings.geminiApiKey);
   }
 
   if (translationCache.size >= TRANSLATION_CACHE_MAX) {
@@ -325,6 +339,69 @@ async function translateTranscriptIfNeeded(text) {
   }
   translationCache.set(cacheKey, translatedText);
   return translatedText;
+}
+
+async function translateWithGemini(text, from, to, apiKey) {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 12000);
+  try {
+    const response = await fetch(`${GEMINI_TRANSLATION_URL}?key=${encodeURIComponent(apiKey)}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        contents: [
+          {
+            parts: [
+              { text: buildGeminiTranslationPrompt(text, from, to) }
+            ]
+          }
+        ],
+        generationConfig: { temperature: 0 }
+      }),
+      signal: controller.signal
+    });
+
+    if (!response.ok) {
+      const body = await response.text().catch(() => '');
+      throw new Error(`Gemini translation HTTP ${response.status}${body ? `: ${body.slice(0, 120)}` : ''}`);
+    }
+
+    const data = await response.json();
+    return extractGeminiText(data);
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+function buildGeminiTranslationPrompt(text, from, to) {
+  const source = languageLabel(from);
+  const target = languageLabel(to);
+  return (
+    `次のテキストを${target}へ翻訳してください。` +
+    (from && from !== 'auto' ? `原文の主な言語は${source}です。` : '') +
+    '翻訳結果のテキストのみを出力し、説明・注釈・引用符・Markdownは付けないでください。\n\n' +
+    text
+  );
+}
+
+function extractGeminiText(result) {
+  const parts = result?.candidates?.[0]?.content?.parts;
+  if (!Array.isArray(parts)) return '';
+  return parts
+    .map((part) => String(part?.text || ''))
+    .join('')
+    .trim();
+}
+
+function languageLabel(language) {
+  return {
+    ja: '日本語',
+    en: '英語',
+    ko: '韓国語',
+    'zh-CN': '中国語(簡体字)',
+    'zh-TW': '中国語(繁体字)',
+    auto: '自動判定'
+  }[language] || language || '自動判定';
 }
 
 async function translateWithGoogle(text, from, to) {
@@ -553,7 +630,11 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   }
 
   if (message.type === 'transcript') {
-    appendTranscript(message.text, message.meta)
+    appendTranscript(message.text, {
+      ...(message.meta || {}),
+      translatedText: message.translatedText,
+      translationHandled: Boolean(message.translationHandled)
+    })
       .then((result) => sendResponse({ ok: true, ...result }))
       .catch((error) => sendResponse({ ok: false, error: error.message }));
     return true;

@@ -19,6 +19,33 @@
 - モデル: `gemini-3.1-flash-lite`（現行世代のFlash-Lite。RPD 150K で実質上限なし、料金面でも最安クラス）
 - チャンク間隔（`chunkMillis`）: 6000ms に統一（Groq/Gemini共通）
 
+## Gemini 翻訳の扱い
+翻訳エンジンにも Gemini API を追加する。認識エンジンと翻訳エンジンの両方が Gemini の場合は、音声チャンク1つにつき1回の `generateContent` で文字起こしと翻訳をまとめて行う。
+
+分離した「Gemini 音声認識 -> Gemini 翻訳」にすると、同じチャンクに対して Gemini API を2回呼ぶことになり、RPD/RPM/TPM の同一プロジェクト枠を二重に消費する。内部一括処理にすると、ユーザーの選択肢は「Geminiで認識 + Geminiで翻訳」のまま保ちつつ、上限消費とレイテンシを抑えられる。
+
+Groq 認識 + Gemini 翻訳のような組み合わせでは、従来どおり認識後に background 側で Gemini テキスト翻訳を行う。
+
+## Gemini 翻訳の上限の見方
+Gemini API の翻訳利用は、DeepL のような「月何文字まで」ではなく、主に以下の上限で見る。
+
+- RPM: 1分あたりのリクエスト数
+- TPM: 1分あたりの入力トークン数
+- RPD: 1日あたりのリクエスト数
+
+これらの上限は API キー単位ではなく Google AI Studio / Google Cloud のプロジェクト単位で適用される。音声認識で Gemini を使った場合も、翻訳で Gemini を使った場合も、同じプロジェクト枠としてカウントされる。
+
+トークンは語数そのものではない。公式ドキュメントでは、トークンは1文字の場合も単語全体の場合もあり、長い単語は複数トークンに分割される。入力と出力のどちらもトークン化される。英語では目安として 100 tokens が 60〜80 words 程度になることが多いが、実際の値は言語と文面で変わる。
+
+この拡張の既定値は 6 秒チャンクなので、最大でも 10 req/min、600 req/hour、24時間連続で 14,400 req/day 程度になる。Gemini 認識 + Gemini 翻訳を内部一括処理する場合は、1チャンクにつき1リクエストのまま。認識と翻訳を分離して2回呼ぶ構成だと、同じチャンクで2リクエスト消費するため、RPD/RPM の消費が約2倍になる。
+
+実際の無料枠・上限値はモデル・アカウント・プロジェクト状態で変わるため、必ず AI Studio の rate-limit ページで確認する。
+
+参考:
+- Rate limits: https://ai.google.dev/gemini-api/docs/rate-limits
+- Token counting: https://ai.google.dev/gemini-api/docs/tokens
+- Pricing: https://ai.google.dev/gemini-api/docs/pricing
+
 ## レート制限(429)対策
 `transcribeWithGemini` で 429 応答を受けた際、エラーボディの `error.status`（`RESOURCE_EXHAUSTED`）とクォータ情報から RPM由来かRPD由来かを判別する。
 - RPM由来（一時的）: 当該チャンクのみスキップし、次のチャンクで通常どおり再試行

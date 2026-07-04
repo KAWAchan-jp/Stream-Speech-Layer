@@ -343,7 +343,11 @@
       <select id="translationProvider">
         <option value="google">Google Translate</option>
         <option value="deepl">DeepL API</option>
+        <option value="gemini">Google AI Studio (Gemini API)</option>
       </select>
+      <p class="hint">
+        Gemini は音声認識で使った場合も、翻訳で使った場合も、同じ Google AI Studio / Google Cloud プロジェクトの上限としてカウントされます。認識エンジンと翻訳エンジンの両方に Gemini を選ぶと、内部では1回の Gemini 呼び出しで文字起こしと翻訳をまとめて処理します。
+      </p>
 
       <label for="deeplKey">DeepL API キー</label>
       <div class="inline-actions">
