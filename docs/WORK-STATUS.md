@@ -13,20 +13,20 @@
 
 ## ブランチ別ステータス
 
-### feature/faster-whisper-local — 担当: Claude Code
+### feature/faster-whisper-local — 担当: Claude Code（完了・developへマージ済み）
 - 役割: 認識エンジンにローカル Faster-Whisper（HTTPサーバー方式・GPU前提）を追加する。
-- 進捗: 実装完了（v0.2.7）。`uv/` に Faster-Whisper サーバー（FastAPI + uv、GPU前提・CPUフォールバック対応）を追加し、
+- 進捗: 実装完了・`develop` へマージ済み（v0.2.8）。`uv/` に Faster-Whisper サーバー（FastAPI + uv、GPU前提・CPUフォールバック対応）を追加し、
   拡張側に `faster-whisper` プロバイダを追加（`transcriber.js` / `background.js` / `offscreen.js` / `options.html,js`）。
   送信先は `localhost` / `127.0.0.1` のみ許可。拡張本体と `uv/` を別ZIPにするビルドスクリプトも追加。
   詳細: `docs/feature-faster-whisper-local.md`
 - 検証: `node --check` 全対象・`manifest.json` 妥当性・`python -m py_compile server.py`・ビルドスクリプト実行は通過。
-  **実ブラウザでの動作確認（サーバー起動→拡張連携）は未実施**。
-- 次の予定: ユーザーによる実機テスト（uvサーバー起動→拡張で認識確認）→ 問題なければ `develop` へマージ。
+  ユーザーによる実機テストで、popupの認識エンジン表示が「未設定」のままになるバグを発見・修正済み（v0.2.8）。
+- 次の予定: 追加作業なし。マージ後にブランチは削除。
 
 ### develop — 統合用（共有）
-- バージョンは `extension/manifest.json` の `version` で管理（3桁目インクリメント方式）。現在 **0.2.6**
-  （`feature/faster-whisper-local` マージ後に 0.2.7 になる想定）。
-- 直近: Gemini API による音声認識・翻訳の一括処理（v0.2.6）まで統合済み。
+- バージョンは `extension/manifest.json` の `version` で管理（3桁目インクリメント方式）。現在 **0.2.8**
+  （`feature/faster-whisper-local` マージ済み）。
+- 直近: ローカル Faster-Whisper 認識エンジン対応（v0.2.8）まで統合済み。
 
 ### master — 本番。直接作業しない。
 
@@ -34,6 +34,9 @@
 
 ## 申し送り（時系列・新しい順）
 
+- **2026-07-05 Claude Code**: `feature/faster-whisper-local` を `develop` へマージ（v0.2.8）。
+  ユーザーの実機テストで、popup の `RECOGNITION_ENGINE_LABELS` に `faster-whisper` が未登録のため
+  認識エンジンが「未設定」と表示されるバグが発覚し、修正した。マージ後にブランチは削除済み。
 - **2026-07-05 Claude Code**: `feature/faster-whisper-local` を作成し、ローカル Faster-Whisper 対応を実装（v0.2.7）。
   参考実装 `E:\MyScript\twitch-chat-translate-ext` の `tools/faster-whisper-server/` を移植しつつ、
   配置先はユーザー指示により `uv/` フォルダに変更。拡張本体と `uv/` は別ZIPでビルドする

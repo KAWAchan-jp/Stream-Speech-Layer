@@ -37,8 +37,11 @@ Groq Whisper API / Gemini API に加えて、ユーザー自身の PC 上で動�
 - `extension/manifest.json` を `ConvertFrom-Json` で妥当性確認し通過。
 - `python -m py_compile uv/server.py` で構文確認し通過。
 - `scripts/build-release.ps1` / `scripts/build-uv-release.ps1` を実行し、それぞれのZIPが正しい内容（`extension/` 一式、`uv/` 一式）で生成されることを確認。
+- **実機テスト（2026-07-05、ユーザー）**: `uv run --with nvidia-cublas-cu12 --with "nvidia-cudnn-cu12>=9,<10" server.py` でサーバーを起動し、
+  拡張の設定で Faster-Whisper を選択。popup の認識エンジン表示が「未設定」のままになるバグを発見。
+  原因は `popup.js` の `RECOGNITION_ENGINE_LABELS` に `faster-whisper` が未登録だったこと。追加して修正（v0.2.8）。
 
 ## 未確認事項
 
-- 実ブラウザでの動作確認（拡張読み込み→設定保存→Faster-Whisperサーバー起動→実際の配信タブでの認識）は未実施（要ユーザーの手動テスト）。
-- 実際に `uv run --with nvidia-cublas-cu12 --with "nvidia-cudnn-cu12>=9,<10" server.py` でサーバーを起動しての疎通確認は未実施。
+- なし。`develop` へマージ済み（v0.2.8）。
+- 参考: 実際の配信タブでの文字起こし精度・レイテンシの評価は継続的な利用の中で確認していく。
