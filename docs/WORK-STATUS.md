@@ -35,8 +35,8 @@
 ## 申し送り（時系列・新しい順）
 
 - **2026-07-05 Codex**: `develop` とタグ `v0.3.0` を GitHub `origin` へ push 済み。
-  GitHub Release 作成は `gh release create` が `HTTP 403: Resource not accessible by personal access token` で失敗。
-  ローカル成果物 `dist/stream-speech-layer-v0.3.0.zip` / `dist/stream-speech-layer-uv-faster-whisper-v0.3.0.zip` は作成済み。
+  GitHub CLI を再認証し、GitHub Release `v0.3.0` を開発版（prerelease）として作成完了。
+  `stream-speech-layer-v0.3.0.zip` / `stream-speech-layer-uv-faster-whisper-v0.3.0.zip` を添付済み。
 - **2026-07-05 Codex**: 開発版 `v0.3.0` の静的検証と配布ZIP作成を完了。
   `node --check`、`manifest.json` JSON妥当性、`uv/server.py` py_compile を通過。
   `dist/stream-speech-layer-v0.3.0.zip` と `dist/stream-speech-layer-uv-faster-whisper-v0.3.0.zip` を作成済み。
