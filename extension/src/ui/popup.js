@@ -17,7 +17,8 @@ let countdownInterval = null;
 
 const RECOGNITION_ENGINE_LABELS = {
   groq: 'Groq Whisper API',
-  gemini: 'Google AI Studio (Gemini API)'
+  gemini: 'Google AI Studio (Gemini API)',
+  'faster-whisper': 'Faster-Whisper（ローカル）'
 };
 
 const TRANSLATION_ENGINE_LABELS = {
