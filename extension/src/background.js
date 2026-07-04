@@ -124,6 +124,7 @@ async function startCapture(tab) {
   const settings = await storageGet([
     'transcriptionProvider',
     'groqApiKey',
+    'geminiApiKey',
     'sourceLanguage',
     'chunkMillis',
     'vadThreshold',
@@ -405,7 +406,8 @@ chrome.runtime.onInstalled.addListener(async () => {
     translationEnabled: false,
     translationProvider: 'google',
     targetLanguage: 'ja',
-    chunkMillis: 5000,
+    // Gemini無料枠のRPD(1日1,500リクエスト)対策で6秒=10req/分に設定（docs/gemini-notes.md参照）
+    chunkMillis: 6000,
     vadThreshold: 10,
     silenceMillis: 700,
     autoStopAt: null,
@@ -481,6 +483,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       'transcriptionProvider',
       'sourceLanguage',
       'groqApiKey',
+      'geminiApiKey',
       'translationEnabled',
       'translationProvider',
       'targetLanguage',
@@ -500,6 +503,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         transcriptionProvider: result.transcriptionProvider || 'none',
         sourceLanguage: result.sourceLanguage || 'ja',
         hasGroqApiKey: Boolean(result.groqApiKey),
+        hasGeminiApiKey: Boolean(result.geminiApiKey),
         translationEnabled: Boolean(result.translationEnabled),
         translationProvider: result.translationProvider || 'google',
         targetLanguage: result.targetLanguage || 'ja',
@@ -530,12 +534,18 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     } else if (typeof message.deeplApiKey === 'string' && message.deeplApiKey.trim()) {
       values.deeplApiKey = message.deeplApiKey.trim();
     }
+    if (message.clearGeminiApiKey) {
+      values.geminiApiKey = '';
+    } else if (typeof message.geminiApiKey === 'string' && message.geminiApiKey.trim()) {
+      values.geminiApiKey = message.geminiApiKey.trim();
+    }
     storageSet(values)
-      .then(() => storageGet(['groqApiKey', 'deeplApiKey']))
+      .then(() => storageGet(['groqApiKey', 'deeplApiKey', 'geminiApiKey']))
       .then((result) => sendResponse({
         ok: true,
         hasGroqApiKey: Boolean(result.groqApiKey),
-        hasDeepLApiKey: Boolean(result.deeplApiKey)
+        hasDeepLApiKey: Boolean(result.deeplApiKey),
+        hasGeminiApiKey: Boolean(result.geminiApiKey)
       }))
       .catch((error) => sendResponse({ ok: false, error: error.message }));
     return true;

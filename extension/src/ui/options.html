@@ -262,6 +262,7 @@
       <select id="provider">
         <option value="none">未設定</option>
         <option value="groq">Groq Whisper API</option>
+        <option value="gemini">Google AI Studio (Gemini API)</option>
       </select>
 
       <label for="language">配信音声の言語</label>
@@ -281,6 +282,20 @@
       <p class="hint">
         キーの取得:
         <a href="https://console.groq.com/keys" target="_blank" rel="noopener">console.groq.com/keys</a>
+      </p>
+
+      <label for="geminiKey">Gemini API キー</label>
+      <div class="inline-actions">
+        <input id="geminiKey" type="password" autocomplete="off" placeholder="新しいキーを入力" />
+        <button id="saveGeminiKey" type="button">保存</button>
+        <button id="clearGeminiKey" class="secondary" type="button">削除</button>
+      </div>
+      <div id="geminiKeyStatus" class="key-status empty">未保存</div>
+      <p class="hint">
+        キーの取得:
+        <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener">aistudio.google.com/apikey</a>
+        （無料・クレジットカード不要）<br />
+        無料枠は1日あたり約2時間30分の連続認識が目安です。Groq に比べて応答速度は遅めです。
       </p>
     </div>
 

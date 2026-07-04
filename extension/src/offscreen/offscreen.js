@@ -1,6 +1,6 @@
 'use strict';
 
-import { transcribeAudioChunk } from '../transcription/transcriber.js';
+import { transcribeAudioChunk, resetGeminiDailyLimitFlag } from '../transcription/transcriber.js';
 
 let audioContext = null;
 let sourceNode = null;
@@ -121,7 +121,7 @@ function createRecorder(stream) {
 }
 
 function startRecorderCycle(recorder) {
-  const chunkMillis = Number(captureSettings.chunkMillis) || 5000;
+  const chunkMillis = Number(captureSettings.chunkMillis) || 6000;
   recorder.start();
   clearTimeout(chunkTimer);
   chunkTimer = setTimeout(() => {
@@ -137,7 +137,8 @@ async function transcribeChunk(blob, mimeType) {
     mimeType,
     language: captureSettings.sourceLanguage || 'ja',
     provider: captureSettings.transcriptionProvider || 'none',
-    groqApiKey: captureSettings.groqApiKey || ''
+    groqApiKey: captureSettings.groqApiKey || '',
+    geminiApiKey: captureSettings.geminiApiKey || ''
   });
 
   if (result.status) sendStatus(result.status);
@@ -178,6 +179,8 @@ async function startCapture({ streamId, settings, tabId, url, title }) {
 
   startLevelMeter(captureStream);
   resetChunkState();
+  // 前回セッションでGeminiのRPD上限フラグが立っていても、新規開始時は再判定させる
+  resetGeminiDailyLimitFlag();
   mediaRecorder = createRecorder(captureStream);
   startRecorderCycle(mediaRecorder);
   sendStatus('タブ音声を取得中...');
