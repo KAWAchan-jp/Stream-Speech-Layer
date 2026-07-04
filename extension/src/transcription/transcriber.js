@@ -116,17 +116,36 @@ async function transcribeWithGemini({ blob, mimeType, language, apiKey }) {
 }
 
 // 429のエラーボディからRPM(一時的)かRPD(日次上限)かを判別する。
-// quotaId に "PerDay" を含む violation があればRPDと判断する
+// ボディ全体の文字列一致だと説明文中の "per day" 等に誤反応するため、
+// 構造化された QuotaFailure.violations の quotaId だけを判定に使う
 async function handleGeminiRateLimit(response) {
   const body = await response.text().catch(() => '');
-  if (/per\s*day|perday/i.test(body)) {
+  // 判定の検証用に生のエラーボディを残す（offscreenのDevToolsコンソールで確認できる）
+  console.error('Gemini API 429:', body);
+
+  const violations = extractGeminiQuotaViolations(body);
+  const daily = violations.find((violation) => /perday/i.test(violation?.quotaId || ''));
+
+  if (daily) {
     geminiDailyLimitReached = true;
+    const limit = daily.quotaValue ? `1日${daily.quotaValue}回` : 'RPD';
     return {
       text: '',
-      status: '本日のGemini無料枠(RPD)の上限に達した可能性があります。エンジンを切り替えるか翌日にご利用ください'
+      status: `本日のGemini無料枠(${limit})の上限に達しました。エンジンを切り替えるか翌日にご利用ください`
     };
   }
   return { text: '', status: '一時的なレート制限のためスキップしました' };
+}
+
+// エラーボディJSONから QuotaFailure の violations 配列を取り出す（無ければ空配列）
+function extractGeminiQuotaViolations(body) {
+  try {
+    const details = JSON.parse(body)?.error?.details;
+    if (!Array.isArray(details)) return [];
+    return details.flatMap((detail) => (Array.isArray(detail?.violations) ? detail.violations : []));
+  } catch (_) {
+    return [];
+  }
 }
 
 function buildGeminiTranscriptionPrompt(language) {
