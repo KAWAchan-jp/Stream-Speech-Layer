@@ -1,5 +1,15 @@
 # ローカル Whisper 検討メモ
 
+## 実装状況（2026-07-05 追記）
+`feature/faster-whisper-local` ブランチで、下記「方針案」のうち **Faster-Whisper（ローカル HTTP サーバー方式）** を実装済み。
+詳細は [feature-faster-whisper-local.md](./feature-faster-whisper-local.md) を参照。
+
+- 認識エンジンに「Faster-Whisper（ローカルサーバー）」を追加（`extension/src/transcription/transcriber.js` ほか）
+- サーバー本体は `uv/`（uv 対応・GPU 前提・`tools/` ではなくプロジェクト直下に配置）
+- 拡張本体と uv サーバーを別々の ZIP にビルドするスクリプトを `scripts/` に追加
+
+以下の「ブラウザ内 Transformers.js によるローカル Whisper（WebGPU/WASM）」は、Faster-Whisper とは別の選択肢として**未実装のまま**残す。
+
 ## 結論
 ローカル Whisper は Stream Speech Layer の本命候補として有力。
 

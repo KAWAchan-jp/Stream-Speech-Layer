@@ -18,6 +18,8 @@ const geminiKeyEl = document.getElementById('geminiKey');
 const geminiKeyStatusEl = document.getElementById('geminiKeyStatus');
 const clearGeminiKeyButton = document.getElementById('clearGeminiKey');
 const saveGeminiKeyButton = document.getElementById('saveGeminiKey');
+const fasterWhisperUrlEl = document.getElementById('fasterWhisperUrl');
+const fasterWhisperModelEl = document.getElementById('fasterWhisperModel');
 
 const resetStyleButton = document.getElementById('resetStyle');
 const backgroundOpacityValueEl = document.getElementById('backgroundOpacityValue');
@@ -127,6 +129,8 @@ async function refreshState() {
 
   providerEl.value = response.transcriptionProvider || 'none';
   languageEl.value = response.sourceLanguage || 'ja';
+  fasterWhisperUrlEl.value = response.fasterWhisperUrl || 'http://127.0.0.1:8765/transcribe';
+  fasterWhisperModelEl.value = response.fasterWhisperModel || 'large-v3-turbo';
   translationEnabledEl.checked = Boolean(response.translationEnabled);
   translationProviderEl.value = response.translationProvider || 'google';
   targetLanguageEl.value = response.targetLanguage || 'ja';
@@ -140,6 +144,8 @@ function collectSettings(extra = {}) {
     type: 'saveSettings',
     transcriptionProvider: providerEl.value,
     sourceLanguage: languageEl.value,
+    fasterWhisperUrl: fasterWhisperUrlEl.value.trim() || 'http://127.0.0.1:8765/transcribe',
+    fasterWhisperModel: fasterWhisperModelEl.value,
     translationEnabled: translationEnabledEl.checked,
     translationProvider: translationProviderEl.value,
     targetLanguage: targetLanguageEl.value,
@@ -164,6 +170,8 @@ async function saveCoreSettings(savedLabel) {
 [
   [providerEl, '認識エンジン'],
   [languageEl, '配信音声の言語'],
+  [fasterWhisperUrlEl, 'Faster-Whisper サーバー URL'],
+  [fasterWhisperModelEl, 'Faster-Whisper モデル'],
   [translationEnabledEl, '翻訳の有効/無効'],
   [translationProviderEl, '翻訳エンジン'],
   [targetLanguageEl, '翻訳先言語']

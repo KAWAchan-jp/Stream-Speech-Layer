@@ -289,6 +289,7 @@
         <option value="none">未設定</option>
         <option value="groq">Groq Whisper API</option>
         <option value="gemini">Google AI Studio (Gemini API)</option>
+        <option value="faster-whisper">Faster-Whisper（ローカルサーバー）</option>
       </select>
 
       <label for="language">配信音声の言語</label>
@@ -322,6 +323,27 @@
         <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener">aistudio.google.com/apikey</a>
         （無料・クレジットカード不要）<br />
         無料枠の上限はモデル・アカウントにより異なります（<a href="https://aistudio.google.com/rate-limit" target="_blank" rel="noopener">rate-limit ページ</a>で確認できます）。Groq に比べて応答速度は遅めです。
+      </p>
+
+      <label for="fasterWhisperUrl">Faster-Whisper サーバー URL</label>
+      <input id="fasterWhisperUrl" type="text" autocomplete="off" placeholder="http://127.0.0.1:8765/transcribe" />
+
+      <label for="fasterWhisperModel">Faster-Whisper モデル</label>
+      <select id="fasterWhisperModel">
+        <option value="small">small（CPU向け・軽量）</option>
+        <option value="medium">medium</option>
+        <option value="large-v3">large-v3</option>
+        <option value="large-v3-turbo">large-v3-turbo（GPU推奨・既定）</option>
+      </select>
+      <p class="hint">
+        API キー不要で、自分の PC 上のサーバーへ音声を送って認識します（外部送信なし）。
+        <strong>GPU（NVIDIA・CUDA対応）搭載 PC を推奨</strong>します。CPU のみの場合は
+        <code>small</code> モデルを選んでください。<br />
+        サーバーの導入・起動方法は配布 ZIP（または本リポジトリ）の <code>uv/README.md</code> を参照してください。
+        <a href="https://docs.astral.sh/uv/getting-started/installation/" target="_blank" rel="noopener">uv 公式のインストール手順</a>
+        から <code>uv</code> を導入し、<code>uv/</code> フォルダで
+        <code>uv run --with nvidia-cublas-cu12 --with "nvidia-cudnn-cu12&gt;=9,&lt;10" server.py</code>
+        を実行するとサーバーが起動します。
       </p>
     </div>
 

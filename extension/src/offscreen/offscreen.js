@@ -140,6 +140,8 @@ async function transcribeChunk(blob, mimeType) {
     provider: captureSettings.transcriptionProvider || 'none',
     groqApiKey: captureSettings.groqApiKey || '',
     geminiApiKey: captureSettings.geminiApiKey || '',
+    fasterWhisperUrl: captureSettings.fasterWhisperUrl || '',
+    fasterWhisperModel: captureSettings.fasterWhisperModel || 'large-v3-turbo',
     translationEnabled: Boolean(captureSettings.translationEnabled),
     translationProvider: captureSettings.translationProvider || 'google',
     targetLanguage: captureSettings.targetLanguage || 'ja'

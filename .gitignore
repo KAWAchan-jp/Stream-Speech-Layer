@@ -1,6 +1,7 @@
 # Local-only files and agent customization notes
 .agent.md
 CLAUDE.md
+AGENTS.md
 .github/
 
 # General local artifacts
@@ -17,3 +18,8 @@ build/
 # Local secrets
 .env
 .env.*
+
+# Faster-Whisper ローカルサーバー（uv/venv実行時の生成物）
+uv/.venv/
+uv/__pycache__/
+
