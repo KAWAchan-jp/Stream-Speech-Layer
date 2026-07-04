@@ -40,7 +40,8 @@ Stream Speech Layer は、配信音声を取得して文字起こしし、結果
 - 結果をテキストとして返す
 - 失敗時は再試行やエラー表示を行う
 - MVP ではローカル Whisper を優先し、必要なら将来的に API 連携へ拡張する
-- 現在の実装は認識エンジン差し替え口を先に用意し、Groq Whisper API を任意設定で使えるようにする
+- 現在の実装は認識エンジン差し替え口を先に用意し、Groq Whisper API / Gemini API / ローカル Faster-Whisper サーバーを任意設定で使えるようにする
+- ローカル Faster-Whisper サーバー（`uv/`、GPU 前提）は拡張とは別プロセスで動作し、拡張はユーザー設定の URL（`localhost` / `127.0.0.1` のみ許可）へ音声を送って結果を受け取る
 
 ### 3. UI Layer
 - popup か side panel で開始/停止/状態表示を行う

@@ -6,7 +6,7 @@
 
 YouTube / Twitch の配信タブ音声をリアルタイムに文字起こし・翻訳し、配信画面へそのまま字幕を重ねて表示する Chrome / Brave 向け Chromium 拡張です。ログ保存にも対応し、あとから見返せます。
 
-![version](https://img.shields.io/badge/version-0.2.6-1565c0)
+![version](https://img.shields.io/badge/version-0.2.7-1565c0)
 ![platform](https://img.shields.io/badge/platform-Chrome%20%7C%20Brave-4c8bf5)
 ![manifest](https://img.shields.io/badge/Manifest-v3-f59e0b)
 ![status](https://img.shields.io/badge/status-開発版-9a3412)
@@ -14,7 +14,7 @@ YouTube / Twitch の配信タブ音声をリアルタイムに文字起こし・
 ## 特長
 
 - 🎧 **タブ音声をそのまま認識** — マイクではなく配信タブの音声を直接取り込み
-- 📝 **リアルタイム文字起こし** — Groq Whisper API / Gemini API で認識
+- 📝 **リアルタイム文字起こし** — Groq Whisper API / Gemini API / ローカル Faster-Whisper で認識
 - 🌐 **その場で翻訳** — Google Translate / DeepL / Gemini API に対応
 - 🈶 **配信画面へ字幕オーバーレイ** — ドラッグ移動・サイズ変更・表示スタイルを自由に調整
 - 💾 **文字起こしログ保存** — 直近 50 件をローカルに記録
@@ -95,7 +95,7 @@ YouTube / Twitch の配信タブ音声をリアルタイムに文字起こし・
 - 現在の YouTube / Twitch タブ音声の取得
 - タブ音声の再出力
 - MediaRecorder による音声チャンク化
-- Groq Whisper API / Google AI Studio (Gemini API) による音声認識
+- Groq Whisper API / Google AI Studio (Gemini API) / ローカル Faster-Whisper サーバーによる音声認識
 - Google Translate / DeepL API / Google AI Studio (Gemini API) による翻訳
 - ページ上字幕オーバーレイ
 - 字幕オーバーレイのドラッグ移動と位置保存
@@ -115,10 +115,20 @@ YouTube / Twitch の配信タブ音声をリアルタイムに文字起こし・
 - 未設定
 - Groq Whisper API
 - Google AI Studio (Gemini API)
+- Faster-Whisper（ローカルサーバー）
 
 未設定の場合、音声チャンクの取得まで行い、外部の音声認識 API には送信しません。
 
 Gemini API は Groq に比べて応答速度が遅めです。まずは Groq を試し、上限に達した日の代替として Gemini を使う運用がおすすめです。
+
+#### Faster-Whisper（ローカルサーバー）
+
+自分の PC 上で動く [Faster-Whisper](https://github.com/SYSTRAN/faster-whisper) サーバーへ音声を送って認識します。API キー不要・無料枠の制限なし・音声データが外部へ送信されないのが特長です。
+
+- **GPU（NVIDIA・CUDA対応）搭載 PC を推奨**します。CPU のみでも動作しますが `large` 系モデルは実用速度が出ません。
+- サーバーの導入方法・起動コマンド・GPU 利用方法は [`uv/README.md`](./uv/README.md) を参照してください（[uv](https://docs.astral.sh/uv/) のダウンロード方法も記載）。
+- 拡張機能の設定ページで、サーバー URL（既定: `http://127.0.0.1:8765/transcribe`）とモデル（`small` / `medium` / `large-v3` / `large-v3-turbo`）を指定します。
+- サーバーが未起動・応答なしの場合はエラーとして読み取りステータスに表示されます。
 
 ### 配信音声の言語
 
@@ -220,5 +230,7 @@ DeepL Pro API キーの場合、`:fx` は不要です。
 - Google AI Studio (Gemini API): 音声認識・翻訳に使用
 - Google Translate: 翻訳に使用
 - DeepL API: 翻訳に使用
+
+Faster-Whisper（ローカルサーバー）を選んだ場合、音声は `localhost` / `127.0.0.1` 上の自分の PC にのみ送信され、外部（インターネット上のサービス）へは送信されません。拡張は安全のため `localhost` / `127.0.0.1` 以外の URL への送信を拒否します。
 
 API キーは拡張内に直書きせず、ユーザーが設定ページから保存します。

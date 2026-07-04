@@ -6,7 +6,7 @@
 
 A Chromium extension for Chrome / Brave that transcribes and translates the audio of a YouTube / Twitch stream tab in real time, and overlays the subtitles directly onto the stream. It also saves a log so you can look back later.
 
-![version](https://img.shields.io/badge/version-0.2.6-1565c0)
+![version](https://img.shields.io/badge/version-0.2.7-1565c0)
 ![platform](https://img.shields.io/badge/platform-Chrome%20%7C%20Brave-4c8bf5)
 ![manifest](https://img.shields.io/badge/Manifest-v3-f59e0b)
 ![status](https://img.shields.io/badge/status-development-9a3412)
@@ -14,7 +14,7 @@ A Chromium extension for Chrome / Brave that transcribes and translates the audi
 ## Features
 
 - 🎧 **Captures tab audio directly** — grabs the stream tab's audio itself, not your microphone
-- 📝 **Real-time transcription** — recognition via the Groq Whisper API / Gemini API
+- 📝 **Real-time transcription** — recognition via the Groq Whisper API / Gemini API / local Faster-Whisper
 - 🌐 **On-the-fly translation** — supports Google Translate / DeepL / Gemini API
 - 🈶 **Subtitle overlay on the stream** — freely drag, resize, and style the panel
 - 💾 **Transcription log** — keeps the latest 50 entries locally
@@ -95,7 +95,7 @@ Internally it uses `chrome.alarms` so it fires reliably even if the service work
 - Capturing audio from the current YouTube / Twitch tab
 - Re-outputting the tab audio
 - Chunking audio with MediaRecorder
-- Speech recognition via the Groq Whisper API / Google AI Studio (Gemini API)
+- Speech recognition via the Groq Whisper API / Google AI Studio (Gemini API) / local Faster-Whisper server
 - Translation via the Google Translate / DeepL API / Google AI Studio (Gemini API)
 - On-page subtitle overlay
 - Dragging and position saving for the subtitle overlay
@@ -115,10 +115,20 @@ Internally it uses `chrome.alarms` so it fires reliably even if the service work
 - Not set
 - Groq Whisper API
 - Google AI Studio (Gemini API)
+- Faster-Whisper (local server)
 
 If not set, it goes as far as capturing audio chunks but does not send them to any external speech recognition API.
 
 The Gemini API responds more slowly than Groq. We recommend trying Groq first and using Gemini as a fallback on days when you hit the Groq limit.
+
+#### Faster-Whisper (local server)
+
+Sends audio to a [Faster-Whisper](https://github.com/SYSTRAN/faster-whisper) server running on your own PC. No API key needed, no free-tier limits, and audio is never sent outside your machine.
+
+- **An NVIDIA GPU with CUDA support is recommended.** It also works on CPU only, but `large` models won't reach practical speed.
+- For setup, the launch command, and GPU usage, see [`uv/README.md`](./uv/README.md) (it also covers how to download [uv](https://docs.astral.sh/uv/)).
+- On the extension's settings page, set the server URL (default: `http://127.0.0.1:8765/transcribe`) and the model (`small` / `medium` / `large-v3` / `large-v3-turbo`).
+- If the server isn't running or doesn't respond, an error is shown on the reading status.
 
 ### Stream audio language
 
@@ -220,5 +230,7 @@ Depending on the selected settings, data is sent to the following external servi
 - Google AI Studio (Gemini API): used for speech recognition and translation
 - Google Translate: used for translation
 - DeepL API: used for translation
+
+If you choose Faster-Whisper (local server), audio is sent only to your own PC at `localhost` / `127.0.0.1` and never to an external (internet) service. For safety, the extension refuses to send audio to any URL other than `localhost` / `127.0.0.1`.
 
 API keys are not hard-coded in the extension; the user saves them from the settings page.

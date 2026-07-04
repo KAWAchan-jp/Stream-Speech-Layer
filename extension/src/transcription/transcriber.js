@@ -23,6 +23,8 @@ export async function transcribeAudioChunk({
   provider,
   groqApiKey,
   geminiApiKey,
+  fasterWhisperUrl,
+  fasterWhisperModel,
   translationEnabled,
   translationProvider,
   targetLanguage
@@ -32,6 +34,19 @@ export async function transcribeAudioChunk({
       return { text: '', status: 'Groq API キーが未設定です', level: 'error' };
     }
     return transcribeWithGroq({ blob, mimeType, language, apiKey: groqApiKey });
+  }
+
+  if (provider === 'faster-whisper') {
+    if (!fasterWhisperUrl) {
+      return { text: '', status: 'Faster-Whisper サーバーの URL が未設定です', level: 'error' };
+    }
+    return transcribeWithFasterWhisper({
+      blob,
+      mimeType,
+      language,
+      url: fasterWhisperUrl,
+      model: fasterWhisperModel || 'large-v3-turbo'
+    });
   }
 
   if (provider === 'gemini') {
@@ -82,6 +97,52 @@ async function transcribeWithGroq({ blob, mimeType, language, apiKey }) {
   if (!response.ok) {
     const body = await response.text().catch(() => '');
     throw new Error(`Groq API ${response.status}: ${body || response.statusText}`);
+  }
+
+  const result = await response.json();
+  const text = String(result.text || '').trim();
+
+  if (isLikelyHallucination(text)) {
+    return { text: '', status: 'ハルシネーションらしい認識結果を破棄しました', level: 'warn' };
+  }
+
+  return { text, status: text ? '認識結果を保存しました' : '認識結果は空でした' };
+}
+
+// ローカルの Faster-Whisper サーバー（uv/server.py）へ送信する。
+// 任意の外部ホストへ音声を送信できてしまわないよう、URL は localhost / 127.0.0.1 のみ許可する
+async function transcribeWithFasterWhisper({ blob, mimeType, language, url, model }) {
+  if (!/^https?:\/\/(127\.0\.0\.1|localhost)(:\d+)?(\/|$)/i.test(url)) {
+    throw new Error('Faster-Whisper の URL は localhost / 127.0.0.1 のみ指定できます');
+  }
+
+  const fileType = normalizeMimeType(mimeType || blob.type);
+  const file = new File([blob], `stream-audio.${extensionForMimeType(fileType)}`, { type: fileType });
+  const formData = new FormData();
+  formData.append('file', file);
+  formData.append('model', model);
+
+  const whisperLanguage = normalizeWhisperLanguage(language);
+  if (whisperLanguage) formData.append('language', whisperLanguage);
+
+  const controller = new AbortController();
+  // サーバー起動直後のモデル読み込み待ちを考慮し30秒でタイムアウトする
+  const timer = setTimeout(() => controller.abort(), 30000);
+  let response;
+  try {
+    response = await fetch(url, { method: 'POST', body: formData, signal: controller.signal });
+  } catch (error) {
+    if (error.name === 'AbortError') {
+      throw new Error('Faster-Whisper サーバーの応答がタイムアウトしました（起動直後はモデル読み込み中の可能性があります）');
+    }
+    throw new Error(`Faster-Whisper サーバーに接続できません（起動しているか uv/README.md を確認してください）: ${error.message}`);
+  } finally {
+    clearTimeout(timer);
+  }
+
+  if (!response.ok) {
+    const body = await response.text().catch(() => '');
+    throw new Error(`Faster-Whisper サーバー ${response.status}: ${body.slice(0, 200) || response.statusText}`);
   }
 
   const result = await response.json();

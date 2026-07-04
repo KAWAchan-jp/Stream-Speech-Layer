@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Stream Speech Layer",
-  "version": "0.2.6",
+  "version": "0.2.7",
   "description": "配信音声を取得して文字起こし・表示・保存する Chromium 拡張",
   "permissions": [
     "offscreen",
@@ -19,7 +19,9 @@
     "https://api-free.deepl.com/*",
     "https://translate.googleapis.com/*",
     "https://www.youtube.com/*",
-    "https://www.twitch.tv/*"
+    "https://www.twitch.tv/*",
+    "http://127.0.0.1/*",
+    "http://localhost/*"
   ],
   "background": {
     "service_worker": "src/background.js"
