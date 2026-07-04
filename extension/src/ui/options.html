@@ -238,12 +238,37 @@
     </div>
 
     <div class="recommend">
+      <h2>上限日の代替: Google AI Studio (Gemini API)</h2>
+      <p>Groq の無料枠を使い切った日でも、認識エンジンを切り替えれば文字起こしを続けられます。</p>
+      <ul>
+        <li>
+          <strong>Gemini（音声認識）</strong>: 無料枠は 1 日 <strong>1,500 リクエスト</strong>が目安で、
+          この拡張のチャンク間隔（6 秒）運用だと <strong>1 日あたり約 2 時間 30 分</strong>の
+          連続認識に相当します。上限は<strong>翌日リセット</strong>されます。
+          <span class="note">※応答速度は Groq より遅めです。</span>
+        </li>
+        <li>
+          キーの取得:
+          <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener">aistudio.google.com/apikey</a>
+          （無料・クレジットカード不要）
+        </li>
+      </ul>
+    </div>
+
+    <div class="recommend">
       <h2>上限エラーが出たときの対処</h2>
       <p>読み取りステータスに赤字の警告が出たら、以下を試してください。</p>
       <ul>
         <li>
-          <strong>Groq（音声認識）が上限</strong>: 現状ほかの認識エンジンが未実装のため、
-          <strong>翌日のリセットまで待つ</strong>しかありません。それまで文字起こしは止まります。
+          <strong>Groq（音声認識）が上限</strong>: 認識エンジンを
+          <strong>Google AI Studio (Gemini API) に切り替えて</strong>ください
+          （認識エンジンの選択を「Google AI Studio (Gemini API)」にして保存。事前に API キーの保存が必要です）。
+          <span class="note">※応答速度は Groq より遅めです。</span>
+        </li>
+        <li>
+          <strong>Gemini（音声認識）が上限</strong>: 日次上限（RPD）に達すると以降の送信は自動停止し、
+          読み取りステータスに案内が表示されます。<strong>Groq に切り替える</strong>か、
+          <strong>翌日のリセットを待って</strong>ください。
         </li>
         <li>
           <strong>DeepL（翻訳）が上限</strong>: 翻訳エンジンを
