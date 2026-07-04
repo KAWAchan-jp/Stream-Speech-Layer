@@ -44,6 +44,12 @@
 - 実機での動作確認（拡張再読み込み → Gemini キー保存 → YouTube/Twitch で認識）: ⬜ 未実施（要ユーザー確認）
 - 429 の RPM/RPD 判別: ⬜ 実運用でのみ発生するため未検証（エラーボディの `PerDay` 文字列で判別する実装。誤判別があればここを見直す）
 
+## 追記（v0.2.2〜v0.2.5）
+- v0.2.2: popup に現在の認識・翻訳エンジンを表示
+- v0.2.3: 429 の RPD 判定をボディ全体の文字列一致から `QuotaFailure.violations[].quotaId` の判別に修正（説明文中の "per day" への誤反応を解消）。429 の生ボディをコンソールへ記録
+- v0.2.4: ステータスメッセージを重要度で色分け（error=赤 / warn=オレンジ / info=通常色）。level を transcriber → offscreen → background → content の全経路に追加
+- v0.2.5: 実測で `gemini-2.5-flash-lite` の無料枠が **RPD 20回/日** しかないことが判明（当初見積の1,500は誤り）。使用モデルを現行世代の `gemini-3.1-flash-lite`（RPD 150K）に変更し、ドキュメントの無料枠記述を「rate-limit ページで要確認」に修正
+
 ## 使い方（動作確認手順）
 1. `chrome://extensions/` で拡張を再読み込み
 2. <https://aistudio.google.com/apikey> で無料の API キーを取得（クレジットカード不要）

@@ -5,20 +5,18 @@
 
 ## 無料枠の概要（2026年7月時点）
 - クレジットカード登録不要でそのまま利用可能。ただし API キー自体は必須（Google AI Studio https://aistudio.google.com/apikey で発行）
-- 無料枠対象は Flash / Flash-Lite 系のみ（Pro は2026年4月に無料枠から除外済み）
-- レート制限（目安、プロジェクト単位）
-  - Gemini 2.5 Flash: 15 RPM / 100万 TPM / 1,500 RPD
-  - Gemini 2.5 Flash-Lite: 30 RPM / 100万 TPM / 1,500 RPD
-  - 正確な値は利用者ごとに [AI Studio のレート制限ページ](https://aistudio.google.com/rate-limit) で要確認
+- **上限はモデル・アカウントごとに大きく異なる**。必ず利用者ごとに [AI Studio のレート制限ページ](https://aistudio.google.com/rate-limit) で確認する
 - 音声入力は 32 トークン/秒でトークン化される
 
-## 実質的なボトルネック
-RPM ではなく **RPD（1日1,500リクエスト）**。
-- チャンク間隔6秒（= 10 req/分）で運用した場合: 1,500 ÷ 10 = 150分（約2時間30分）で1日分を使い切る
-- RPM上限（Flash 15 / Flash-Lite 30）に対しては10 req/分で十分な余裕がある
+## 実測値の教訓（2026-07-04）
+当初、ブログ等の情報から「Flash-Lite は 1,500 RPD（約2時間30分/日）」と見積もっていたが、**実測では `gemini-2.5-flash-lite` の無料枠RPDはわずか20回/日**で、開始2分で枯渇した。旧世代（2.5系）は無料枠が極端に絞られている。
+
+一方、同じアカウントのレート制限ページでは現行世代の **Gemini 3.1 Flash Lite が RPD 150K / RPM 4K** と桁違いに大きかったため、使用モデルをこちらに変更した。
+
+**教訓: Gemini の無料枠はブログの二次情報ではなく、自分のアカウントの rate-limit ページの実数値で判断する。世代交代で旧モデルの無料枠は急激に削られる。**
 
 ## 採用する既定値
-- モデル: `gemini-2.5-flash-lite`（RPM上限が緩く、料金面でも最安）
+- モデル: `gemini-3.1-flash-lite`（現行世代のFlash-Lite。RPD 150K で実質上限なし、料金面でも最安クラス）
 - チャンク間隔（`chunkMillis`）: 6000ms に統一（Groq/Gemini共通）
 
 ## レート制限(429)対策

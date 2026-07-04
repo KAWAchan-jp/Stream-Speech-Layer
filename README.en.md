@@ -6,7 +6,7 @@
 
 A Chromium extension for Chrome / Brave that transcribes and translates the audio of a YouTube / Twitch stream tab in real time, and overlays the subtitles directly onto the stream. It also saves a log so you can look back later.
 
-![version](https://img.shields.io/badge/version-0.2.4-1565c0)
+![version](https://img.shields.io/badge/version-0.2.5-1565c0)
 ![platform](https://img.shields.io/badge/platform-Chrome%20%7C%20Brave-4c8bf5)
 ![manifest](https://img.shields.io/badge/Manifest-v3-f59e0b)
 ![status](https://img.shields.io/badge/status-development-9a3412)
@@ -175,7 +175,7 @@ The panel can be moved by dragging its top bar and resized with the bottom-right
 Both can be used daily within their free tiers.
 
 - **Groq (speech recognition)**: Depending on the stream, the free tier is roughly enough for about 1–2 hours of transcription per day (estimate: 2,000 requests/day, 7,200 seconds of audio per hour). The limit resets the next day.
-- **Gemini (speech recognition)**: The free tier allows roughly 1,500 requests per day; with the 6-second chunk interval this equals about 2.5 hours of continuous recognition per day. The limit resets the next day. Responses are slower than Groq.
+- **Gemini (speech recognition)**: Uses the Gemini 3.1 Flash Lite model. Free-tier limits vary by model and account (check <https://aistudio.google.com/rate-limit>). When the daily limit is reached, requests stop automatically and reset the next day. Responses are slower than Groq.
 - **DeepL (translation)**: The free tier (DeepL API Free) allows up to 500,000 characters per month. Since subtitles are short sentences, this is usually plenty. This resets monthly rather than daily.
 
 ## Handling limit errors

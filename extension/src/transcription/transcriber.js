@@ -3,8 +3,9 @@
 const GROQ_TRANSCRIPTION_URL = 'https://api.groq.com/openai/v1/audio/transcriptions';
 const GROQ_MODEL = 'whisper-large-v3-turbo';
 
-// 無料枠のRPD(1日1,500リクエスト)対策のためFlash-Lite固定（詳細は docs/gemini-notes.md）
-const GEMINI_MODEL = 'gemini-2.5-flash-lite';
+// 旧世代(2.5系)は無料枠RPDが極端に小さい(実測で1日20回)ため、現行世代のFlash-Liteを使う。
+// 無料枠の上限はモデル・アカウントごとに異なる（詳細は docs/gemini-notes.md）
+const GEMINI_MODEL = 'gemini-3.1-flash-lite';
 const GEMINI_TRANSCRIPTION_URL = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent`;
 
 // RPD(日次上限)到達後に6秒毎の無駄なリクエストを送り続けないためのフラグ。

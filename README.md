@@ -6,7 +6,7 @@
 
 YouTube / Twitch の配信タブ音声をリアルタイムに文字起こし・翻訳し、配信画面へそのまま字幕を重ねて表示する Chrome / Brave 向け Chromium 拡張です。ログ保存にも対応し、あとから見返せます。
 
-![version](https://img.shields.io/badge/version-0.2.4-1565c0)
+![version](https://img.shields.io/badge/version-0.2.5-1565c0)
 ![platform](https://img.shields.io/badge/platform-Chrome%20%7C%20Brave-4c8bf5)
 ![manifest](https://img.shields.io/badge/Manifest-v3-f59e0b)
 ![status](https://img.shields.io/badge/status-開発版-9a3412)
@@ -175,7 +175,7 @@ DeepL Pro API キーの場合、`:fx` は不要です。
 いずれも無料枠だけで日常的に使えます。
 
 - **Groq（音声認識）**: 無料枠でも配信内容にもよりますが 1 日あたりおおよそ 1〜2 時間ぶんの文字起こしに使えます（目安: 1 日 2,000 リクエスト / 1 時間あたり音声 7,200 秒）。上限は翌日リセットされます。
-- **Gemini（音声認識）**: 無料枠は 1 日 1,500 リクエストが目安で、チャンク間隔 6 秒運用だと 1 日あたり約 2 時間 30 分の連続認識に相当します。上限は翌日リセットされます。Groq に比べて応答速度は遅めです。
+- **Gemini（音声認識）**: 使用モデルは Gemini 3.1 Flash Lite。無料枠の上限はモデル・アカウントにより異なります（<https://aistudio.google.com/rate-limit> で確認できます）。日次上限に達すると送信を自動停止し、翌日リセットされます。Groq に比べて応答速度は遅めです。
 - **DeepL（翻訳）**: 無料枠（DeepL API Free）は月 50 万文字まで翻訳できます。字幕は 1 文が短いため通常は十分です。こちらは日次ではなく毎月リセットです。
 
 ## 上限エラー時の対処
