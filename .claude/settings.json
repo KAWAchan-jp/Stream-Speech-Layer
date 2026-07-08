@@ -1,0 +1,34 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git checkout *)",
+      "Bash(node --check extension/src/background.js)",
+      "Bash(node --check extension/src/ui/popup.js)",
+      "Bash(python3 -m json.tool extension/manifest.json)",
+      "PowerShell(node --check extension/src/background.js)",
+      "PowerShell(node --check extension/src/ui/popup.js)",
+      "Bash(node --check extension/src/transcription/transcriber.js)",
+      "Bash(git add *)",
+      "Bash(git commit -m ' *)",
+      "Bash(git commit *)",
+      "Bash(git merge *)",
+      "Bash(git branch *)",
+      "PowerShell(node --check extension/src/transcription/transcriber.js)",
+      "Bash(git push *)",
+      "Bash(wsl bash *)",
+      "PowerShell(powershell -ExecutionPolicy Bypass -File scripts/build-release.ps1; powershell -ExecutionPolicy Bypass -File scripts/build-uv-release.ps1)",
+      "Bash(git tag *)",
+      "Bash(node --check extension/src/content.js)",
+      "Bash(git fetch *)",
+      "Bash(powershell -NoProfile -Command 'if \\($env:GITHUB_TOKEN\\) { Write-Output '\\\\''TOKEN_SET'\\\\'' } else { Write-Output '\\\\''TOKEN_MISSING'\\\\'' }')",
+      "PowerShell(git add docs/WORK-STATUS.md docs/feature-fix-stale-session-lockout.md extension/manifest.json extension/src/background.js)",
+      "PowerShell(git commit -F \"e:\\\\Users\\\\KAWAchan\\\\AppData\\\\Local\\\\Temp\\\\claude\\\\e--MyScript-Stream-Speech-Layer\\\\9f910175-247b-48be-b8dd-0de79b569bd8\\\\scratchpad\\\\commit-msg-2.txt\")",
+      "PowerShell(git checkout develop)",
+      "PowerShell(git merge --no-ff fix/stale-session-lockout -m \"�}�[�W: fix/stale-session-lockout��develop�֓��� v0.3.4\")",
+      "PowerShell(git add docs/WORK-STATUS.md docs/feature-fix-clear-overlay-on-start.md extension/manifest.json extension/src/background.js)",
+      "PowerShell(git commit -F \"e:\\\\Users\\\\KAWAchan\\\\AppData\\\\Local\\\\Temp\\\\claude\\\\e--MyScript-Stream-Speech-Layer\\\\9f910175-247b-48be-b8dd-0de79b569bd8\\\\scratchpad\\\\commit-msg-5.txt\")",
+      "PowerShell(git merge --no-ff fix/clear-overlay-on-start -m \"�}�[�W: fix/clear-overlay-on-start��develop�֓��� v0.3.7\")",
+      "PowerShell(git branch -d fix/clear-overlay-on-start)"
+    ]
+  }
+}
