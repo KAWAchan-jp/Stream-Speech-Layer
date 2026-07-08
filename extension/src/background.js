@@ -161,7 +161,10 @@ async function startCapture(tab) {
     isEnabled: true,
     activeTabId: tab.id,
     activeUrl: tab.url,
-    activeTitle: tab.title || ''
+    activeTitle: tab.title || '',
+    // 前回セッションの表示内容が新規開始時にオーバーレイへ残らないようクリアする
+    lastTranscript: '',
+    lastTranslation: ''
   });
   // タイマーが予約済みなら、開始と同時にカウントダウンを始める
   const { autoStopEnabled, autoStopMinutes } = await storageGet(['autoStopEnabled', 'autoStopMinutes']);

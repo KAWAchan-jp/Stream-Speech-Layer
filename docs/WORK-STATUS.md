@@ -9,21 +9,32 @@
   `docs/feature-<ブランチ名>.md` に残す運用（`CLAUDE.md` 参照）。ここには要点とリンクだけを書く
 - リリースでZIPファイルを添付した場合は、ファイル名だけでなく各ZIPが何か（拡張機能本体／
   Faster-Whisperローカルサーバーなど任意コンポーネント）を一言添える
-- 最終更新: 2026-07-09 / by Claude Code（feature/more-languages 着手）
+- 最終更新: 2026-07-09 / by Claude Code（fix/clear-overlay-on-start 着手）
 
 ---
 
 ## ブランチ別ステータス
 
-### feature/more-languages — 担当: Claude Code（実装完了・実機確認待ち）
+### fix/clear-overlay-on-start — 担当: Claude Code（実装完了・実機確認待ち）
+- 役割: 開始ボタンを押したときに翻訳ウィンドウ（字幕オーバーレイ）へ前回セッションの内容が
+  残ってしまう不具合を修正する。
+- 進捗: 実装完了（v0.3.7）。`background.js`の`startCapture()`内、既存の`storageSet()`呼び出しに
+  `lastTranscript: ''`, `lastTranslation: ''` を追加し、開始時に前回内容をクリアするようにした。
+  `content.js`は無改修（既存の空文字チェックで自然にクリア状態が表示される）。
+  詳細: `docs/feature-fix-clear-overlay-on-start.md`
+- 検証: `node --check background.js`、`manifest.json`のJSON妥当性は通過。実ブラウザでの動作確認は**未実施**。
+- 次の予定: 実ブラウザでの動作確認後 `develop` へマージ。
+
+### feature/more-languages — 担当: Claude Code（完了・developへマージ済み）
 - 役割: 配信音声の言語・翻訳先言語の選択肢を増やす。ユーザーから「対応言語を増やしてほしい」との
   要望を受け、中国語・フランス語・ドイツ語・スペイン語・ポルトガル語・ロシア語・イタリア語の7言語を追加。
-- 進捗: 実装完了（v0.3.6）。`options.html`の2つのセレクトに7言語を追加。`background.js`の
+- 進捗: 実装完了・`develop`へマージ済み（v0.3.6）。`options.html`の2つのセレクトに7言語を追加。`background.js`の
   `normalizeDeepLSourceLanguage()`/`normalizeDeepLTargetLanguage()`（ポルトガル語はPT-BR地域指定）・
-  `languageLabel()`、`transcriber.js`の`languageNames`（Gemini用）を更新。詳細: `docs/feature-more-languages.md`
+  `languageLabel()`、`transcriber.js`の`languageNames`（Gemini用）を更新。マージ後にブランチは削除済み。
+  詳細: `docs/feature-more-languages.md`
 - 検証: `node --check`（background.js/transcriber.js）、`manifest.json`のJSON妥当性は通過。
   実ブラウザでの動作確認は**未実施**。
-- 次の予定: 実ブラウザで各認識・翻訳エンジンでの動作確認後 `develop` へマージ。
+- 次の予定: 実ブラウザでの動作確認は次の作業者・ユーザーが行うこと。
 
 ### fix/hallucination-repeat-filter — 担当: Claude Code（完了・developへマージ済み）
 - 役割: 認識結果に「ほぼ同一文の反復」が出る場合（Whisperの典型的なハルシネーション）を検出して破棄する。
@@ -90,10 +101,11 @@
   `stream-speech-layer-v0.3.3.zip` / `stream-speech-layer-uv-faster-whisper-v0.3.3.zip` を添付。
   実ブラウザでの動作確認はまだのため、継続して要確認。
 - **ローカルの`develop`ブランチは `fix/stale-session-lockout`（v0.3.4相当）・`fix/hallucination-repeat-filter`
-  （v0.3.5）までマージ済み**だが、GitHub Releaseはユーザー指示で取り消し済み（他の問題を先に直すため）。
-  リモートの`develop`はv0.3.3の状態（`3854d7f`）のまま。次にリリースする際は、ローカルに積み上がった
-  未リリース分（stale-session-lockout、hallucination-repeat-filter、対応言語追加）をまとめて公開する想定。
-  `extension/manifest.json` の `version` は現在 **0.3.6**（作業中の`feature/more-languages`ブランチ）。
+  （v0.3.5）・`feature/more-languages`（v0.3.6）までマージ済み**だが、GitHub Releaseはユーザー指示で
+  取り消し済み（他の問題を先に直すため）。リモートの`develop`はv0.3.3の状態（`3854d7f`）のまま。
+  次にリリースする際は、ローカルに積み上がった未リリース分（stale-session-lockout、
+  hallucination-repeat-filter、対応言語追加、clear-overlay-on-start）をまとめて公開する想定。
+  `extension/manifest.json` の `version` は現在 **0.3.7**（作業中の`fix/clear-overlay-on-start`ブランチ）。
 
 ### master — 本番。直接作業しない。
 
@@ -101,6 +113,13 @@
 
 ## 申し送り（時系列・新しい順）
 
+- **2026-07-09 Claude Code**: `feature/more-languages` を `develop` へマージ（v0.3.6、GitHub Release未公開、
+  引き続きテスト中のため保留）。続けてユーザーから「開始ボタンを押したときに翻訳ウィンドウに前回の内容が
+  残っている。クリアした状態から始めたい」との報告を受け`fix/clear-overlay-on-start`を作成。
+  `background.js`の`startCapture()`で`isEnabled`等を書き込む既存の`storageSet()`呼び出しに
+  `lastTranscript: ''`, `lastTranslation: ''` を追加し、開始時に前回セッションの表示内容をクリアするようにした
+  （v0.3.7）。`content.js`は無改修。実ブラウザでの動作確認は未実施のため、次の作業者・ユーザーは
+  `docs/feature-fix-clear-overlay-on-start.md`の検証手順を確認してください。
 - **2026-07-09 Claude Code**: `fix/hallucination-repeat-filter` を `develop` へマージ（v0.3.5、GitHub Release未公開）。
   続けてユーザーから「配信言語、翻訳言語ともに対応言語を増やしてほしい」との要望を受け`feature/more-languages`
   を作成。中国語・フランス語・ドイツ語・スペイン語・ポルトガル語・ロシア語・イタリア語の7言語を
