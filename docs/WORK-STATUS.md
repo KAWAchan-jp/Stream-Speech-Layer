@@ -7,21 +7,23 @@
 - 新しいブランチで作業を始めたら、このファイルに欄を追加する
 - ブランチ作業の詳細（目的・実装方針・変更内容・検証結果・未確認事項）は
   `docs/feature-<ブランチ名>.md` に残す運用（`CLAUDE.md` 参照）。ここには要点とリンクだけを書く
-- 最終更新: 2026-07-09 / by Claude Code（fix/tab-scoped-overlay 着手）
+- 最終更新: 2026-07-09 / by Claude Code（v0.3.3 リリース完了）
 
 ---
 
 ## ブランチ別ステータス
 
-### fix/tab-scoped-overlay — 担当: Claude Code（実装完了・実機確認待ち）
+### fix/tab-scoped-overlay — 担当: Claude Code（完了・developへマージ済み・GitHub Release公開済み）
 - 役割: 翻訳を開始したタブ以外にも翻訳ウィンドウが表示される不具合を修正し、
   別タブから開始した際に既存セッションを黙って切り替えてしまう挙動（多重起動的バグ）を防ぐ。
-- 進捗: 実装完了（v0.3.3）。`background.js`（`startCapture`の別タブ拒否・`get-own-tab-id`・`getState`への`activeTabId`追加）、
-  `content.js`（自タブID判定によるオーバーレイ表示制御）、`popup.js`（他タブ実行中の警告表示・開始ボタン無効化）を修正。
+- 進捗: 実装完了・`develop` へマージ済み（v0.3.3）。`background.js`（`startCapture`の別タブ拒否・`get-own-tab-id`・
+  `getState`への`activeTabId`追加）、`content.js`（自タブID判定によるオーバーレイ表示制御）、
+  `popup.js`（他タブ実行中の警告表示・開始ボタン無効化）を修正。マージ後にブランチは削除済み。
   詳細: `docs/feature-fix-tab-scoped-overlay.md`
 - 検証: `node --check`（background.js/content.js/popup.js）、`manifest.json`のJSON妥当性は通過。
-  実ブラウザでの動作確認は**未実施**。
-- 次の予定: 実機確認（複数タブでの表示範囲・別タブからの開始拒否・警告表示）を行ってから `develop` へマージ。
+  実ブラウザでの動作確認はユーザー側で**未実施のまま公開**（ユーザー指示によりリリース優先）。
+  <https://github.com/KAWAchan-jp/Stream-Speech-Layer/releases/tag/v0.3.3>
+- 次の予定: ユーザーが実機で動作確認し、`docs/feature-fix-tab-scoped-overlay.md` の検証手順の結果を追記すること。
 
 ### feature/all-sites-support — 担当: Claude Code（完了・developへマージ済み）
 - 役割: タブ音声取得の対象サイト制限（YouTube/Twitch限定）を撤廃し、全サイトで使えるようにする。
@@ -43,11 +45,11 @@
 - 次の予定: 追加作業なし。マージ後にブランチは削除。
 
 ### develop — 統合用（共有）
-- バージョンは `extension/manifest.json` の `version` で管理。現在 **0.3.2**
-  （`feature/faster-whisper-local`、`feature/all-sites-support` マージ済み）。
-- 直近: 全サイト対応を含む開発版 `v0.3.2` を GitHub Release として公開済み（Latest指定）。
-  `stream-speech-layer-v0.3.2.zip` / `stream-speech-layer-uv-faster-whisper-v0.3.2.zip` を添付。
-  実ブラウザでの全サイト動作確認はまだのため、継続して要確認。
+- バージョンは `extension/manifest.json` の `version` で管理。現在 **0.3.3**
+  （`fix/tab-scoped-overlay` マージ済み）。
+- 直近: 翻訳ウィンドウのタブ限定修正を含む `v0.3.3` を GitHub Release として公開済み（Latest指定）。
+  `stream-speech-layer-v0.3.3.zip` / `stream-speech-layer-uv-faster-whisper-v0.3.3.zip` を添付。
+  実ブラウザでの動作確認はまだのため、継続して要確認。
 
 ### master — 本番。直接作業しない。
 
@@ -55,6 +57,12 @@
 
 ## 申し送り（時系列・新しい順）
 
+- **2026-07-09 Claude Code**: `fix/tab-scoped-overlay` を `develop` へマージし、ユーザー指示により
+  実機動作確認前に `v0.3.3` を GitHub Release として公開（Latest指定）。
+  <https://github.com/KAWAchan-jp/Stream-Speech-Layer/releases/tag/v0.3.3>
+  `stream-speech-layer-v0.3.3.zip` / `stream-speech-layer-uv-faster-whisper-v0.3.3.zip` を添付済み。
+  マージ後にブランチは削除済み。**次の作業者・ユーザーへ**: `docs/feature-fix-tab-scoped-overlay.md` の
+  検証手順（複数タブでの表示範囲・別タブからの開始拒否・警告表示）を実機で確認し、結果を追記してください。
 - **2026-07-09 Claude Code**: `fix/tab-scoped-overlay` を作成。ユーザーから「翻訳を開始したタブ以外にも
   翻訳ウィンドウが出てしまう」との指摘を受け、`content.js` にタブID判定を追加してオーバーレイの表示範囲を
   開始タブのみに限定。あわせて `background.js` の `startCapture()` が別タブから開始要求を受けると
