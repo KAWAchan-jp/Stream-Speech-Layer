@@ -348,12 +348,11 @@ function extensionForMimeType(type) {
 
 function isLikelyHallucination(text) {
   const normalized = text.toLowerCase().replace(/[。、！？!?,.\s]/g, '');
-  if (normalized.length < 2) return true;
+  if (!normalized) return false;
 
   return [
     'ご視聴ありがとうございました',
     'ご視聴ありがとうございます',
-    'ありがとうございました',
     'チャンネル登録よろしくお願いします',
     'thankyouforwatching',
     'thanksforwatching',
