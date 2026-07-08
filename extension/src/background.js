@@ -119,6 +119,8 @@ async function startCapture(tab) {
     throw new Error('対応していないページです（chrome:// や拡張機能ストアなどでは使用できません）');
   }
 
+  await reconcileStaleSession();
+
   if (activeSession?.tabId && activeSession.tabId !== tab.id) {
     throw new Error(`他のタブ（${activeSession.title || activeSession.url}）で実行中です。先に停止してください。`);
   }
@@ -186,6 +188,27 @@ async function stopCapture() {
   await storageSet({ isEnabled: false, activeTabId: null, activeUrl: '', activeTitle: '' });
   await refreshBadge();
   if (tabId) sendToTab(tabId, { type: 'state-changed', enabled: false });
+}
+
+// storageに残るactiveTabIdが実在するタブか確認する
+async function isTabAlive(tabId) {
+  if (!tabId) return false;
+  try {
+    await chrome.tabs.get(tabId);
+    return true;
+  } catch (_) {
+    return false;
+  }
+}
+
+// Service Workerの再起動でactiveSessionが失われても、storage(正本)が「実行中」のまま
+// 対象タブが既に閉じられている場合はstopCapture()で状態を確実にリセットする
+async function reconcileStaleSession() {
+  const { isEnabled, activeTabId } = await storageGet(['isEnabled', 'activeTabId']);
+  if (!isEnabled || !activeTabId) return false;
+  if (await isTabAlive(activeTabId)) return false;
+  await stopCapture();
+  return true;
 }
 
 function clampMinutes(minutes) {
@@ -509,11 +532,26 @@ chrome.runtime.onInstalled.addListener(async () => {
   await refreshBadge();
 });
 
-chrome.tabs.onRemoved.addListener((tabId) => {
-  if (activeSession?.tabId === tabId) {
-    stopCapture().catch(() => {});
-  }
+// ブラウザ起動時: 前回終了時のstale状態(閉じられたタブの旧activeTabId等)を掃除する
+chrome.runtime.onStartup.addListener(() => {
+  reconcileStaleSession().catch(() => {});
 });
+
+chrome.tabs.onRemoved.addListener((tabId) => {
+  stopIfActiveTab(tabId).catch(() => {});
+});
+
+// Service Worker再起動直後はactiveSessionがnullのため、storageのactiveTabIdでも判定する
+async function stopIfActiveTab(removedTabId) {
+  if (activeSession?.tabId === removedTabId) {
+    await stopCapture();
+    return;
+  }
+  const { isEnabled, activeTabId } = await storageGet(['isEnabled', 'activeTabId']);
+  if (isEnabled && activeTabId === removedTabId) {
+    await stopCapture();
+  }
+}
 
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message.type === 'startCapture') {
@@ -564,7 +602,8 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   }
 
   if (message.type === 'getState') {
-    storageGet([
+    // popupが開くたびに呼ばれる。応答前にstale状態(閉じられたタブが実行中扱いのまま)を修復する
+    reconcileStaleSession().catch(() => {}).then(() => storageGet([
       'isEnabled',
       'transcriptLog',
       'lastTranscript',
@@ -585,7 +624,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       'autoStopAt',
       'autoStopMinutes',
       'autoStopEnabled'
-    ]).then((result) => {
+    ])).then((result) => {
       sendResponse({
         ok: true,
         enabled: Boolean(result.isEnabled),
