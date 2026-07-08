@@ -7,7 +7,7 @@
 - 新しいブランチで作業を始めたら、このファイルに欄を追加する
 - ブランチ作業の詳細（目的・実装方針・変更内容・検証結果・未確認事項）は
   `docs/feature-<ブランチ名>.md` に残す運用（`CLAUDE.md` 参照）。ここには要点とリンクだけを書く
-- 最終更新: 2026-07-09 / by Claude Code
+- 最終更新: 2026-07-09 / by Claude Code（v0.3.2 リリース完了）
 
 ---
 
@@ -35,8 +35,9 @@
 ### develop — 統合用（共有）
 - バージョンは `extension/manifest.json` の `version` で管理。現在 **0.3.2**
   （`feature/faster-whisper-local`、`feature/all-sites-support` マージ済み）。
-- 直近: タブ音声取得の対象サイト制限を撤廃し全サイト対応（v0.3.2）。
-  実ブラウザでの動作確認はまだのため、リリース前に要実施。
+- 直近: 全サイト対応を含む開発版 `v0.3.2` を GitHub Release として公開済み（Latest指定）。
+  `stream-speech-layer-v0.3.2.zip` / `stream-speech-layer-uv-faster-whisper-v0.3.2.zip` を添付。
+  実ブラウザでの全サイト動作確認はまだのため、継続して要確認。
 
 ### master — 本番。直接作業しない。
 
@@ -44,6 +45,11 @@
 
 ## 申し送り（時系列・新しい順）
 
+- **2026-07-09 Claude Code**: 開発版 `v0.3.2` をGitHub Releaseとして公開（Latest指定、prerelease解除）。
+  タグ `v0.3.2` を push し、`build-release.ps1` / `build-uv-release.ps1` でZIPを作成、
+  GitHub API（PowerShell `Invoke-RestMethod` + `$env:GITHUB_TOKEN`）でリリース作成とZIP添付を実施。
+  <https://github.com/KAWAchan-jp/Stream-Speech-Layer/releases/tag/v0.3.2>
+  実ブラウザでの全サイト動作確認は未実施のまま。次の作業者・ユーザーは実機確認をお願いします。
 - **2026-07-09 Claude Code**: `feature/all-sites-support` を作成。ユーザーから「タブ音声を拾う仕組みなら
   YouTube/Twitch以外でも使えるのでは」と指摘を受け、対象サイト制限を撤廃する実装を実施。
   `manifest.json`（content_scripts/host_permissions）、`background.js`（URL判定）、popup・READMEの文言を修正。
