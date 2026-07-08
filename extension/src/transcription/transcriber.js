@@ -346,7 +346,36 @@ function extensionForMimeType(type) {
   return 'webm';
 }
 
+// 文字位置ベースの類似度（同じ長さ付近の文の一致率）。編集距離までは計算せず軽量に判定する
+function sentenceSimilarity(a, b) {
+  const len = Math.max(a.length, b.length);
+  if (len === 0) return 1;
+  const minLen = Math.min(a.length, b.length);
+  let same = 0;
+  for (let i = 0; i < minLen; i += 1) {
+    if (a[i] === b[i]) same += 1;
+  }
+  return same / len;
+}
+
+// Whisperの反復ハルシネーション検出: ほぼ同一の短文が連続して繰り返される場合を検出する
+function hasRepeatedSentenceLoop(text) {
+  const sentences = text
+    .split(/[。！？.!?]+/)
+    .map((s) => s.trim())
+    .filter((s) => s.length >= 4);
+  if (sentences.length < 3) return false;
+
+  let repeatCount = 0;
+  for (let i = 1; i < sentences.length; i += 1) {
+    if (sentenceSimilarity(sentences[i - 1], sentences[i]) >= 0.7) repeatCount += 1;
+  }
+  return repeatCount >= 2;
+}
+
 function isLikelyHallucination(text) {
+  if (hasRepeatedSentenceLoop(text)) return true;
+
   const normalized = text.toLowerCase().replace(/[。、！？!?,.\s]/g, '');
   if (!normalized) return false;
 
