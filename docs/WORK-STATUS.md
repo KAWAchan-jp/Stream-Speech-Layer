@@ -9,61 +9,64 @@
   `docs/feature-<ブランチ名>.md` に残す運用（`CLAUDE.md` 参照）。ここには要点とリンクだけを書く
 - リリースでZIPファイルを添付した場合は、ファイル名だけでなく各ZIPが何か（拡張機能本体／
   Faster-Whisperローカルサーバーなど任意コンポーネント）を一言添える
-- 最終更新: 2026-07-09 / by Claude Code（fix/clear-overlay-on-start 着手）
+- 最終更新: 2026-07-09 / by Claude Code（v0.3.7 リリース完了）
 
 ---
 
 ## ブランチ別ステータス
 
-### fix/clear-overlay-on-start — 担当: Claude Code（実装完了・実機確認待ち）
+### fix/clear-overlay-on-start — 担当: Claude Code（完了・developへマージ済み・GitHub Release公開済み）
 - 役割: 開始ボタンを押したときに翻訳ウィンドウ（字幕オーバーレイ）へ前回セッションの内容が
   残ってしまう不具合を修正する。
-- 進捗: 実装完了（v0.3.7）。`background.js`の`startCapture()`内、既存の`storageSet()`呼び出しに
-  `lastTranscript: ''`, `lastTranslation: ''` を追加し、開始時に前回内容をクリアするようにした。
-  `content.js`は無改修（既存の空文字チェックで自然にクリア状態が表示される）。
+- 進捗: 実装完了・`develop`へマージ済み（v0.3.7）。`background.js`の`startCapture()`内、既存の`storageSet()`
+  呼び出しに`lastTranscript: ''`, `lastTranslation: ''` を追加し、開始時に前回内容をクリアするようにした。
+  `content.js`は無改修（既存の空文字チェックで自然にクリア状態が表示される）。マージ後にブランチは削除済み。
   詳細: `docs/feature-fix-clear-overlay-on-start.md`
-- 検証: `node --check background.js`、`manifest.json`のJSON妥当性は通過。実ブラウザでの動作確認は**未実施**。
-- 次の予定: 実ブラウザでの動作確認後 `develop` へマージ。
+- 検証: `node --check background.js`、`manifest.json`のJSON妥当性は通過。実ブラウザでの動作確認は**未実施のまま公開**
+  （ユーザー指示によりリリース優先）。<https://github.com/KAWAchan-jp/Stream-Speech-Layer/releases/tag/v0.3.7>
+- 次の予定: ユーザーが実機で動作確認し、`docs/feature-fix-clear-overlay-on-start.md` の検証手順の結果を追記すること。
 
-### feature/more-languages — 担当: Claude Code（完了・developへマージ済み）
+### feature/more-languages — 担当: Claude Code（完了・developへマージ済み・GitHub Release公開済み）
 - 役割: 配信音声の言語・翻訳先言語の選択肢を増やす。ユーザーから「対応言語を増やしてほしい」との
   要望を受け、中国語・フランス語・ドイツ語・スペイン語・ポルトガル語・ロシア語・イタリア語の7言語を追加。
-- 進捗: 実装完了・`develop`へマージ済み（v0.3.6）。`options.html`の2つのセレクトに7言語を追加。`background.js`の
-  `normalizeDeepLSourceLanguage()`/`normalizeDeepLTargetLanguage()`（ポルトガル語はPT-BR地域指定）・
-  `languageLabel()`、`transcriber.js`の`languageNames`（Gemini用）を更新。マージ後にブランチは削除済み。
-  詳細: `docs/feature-more-languages.md`
+- 進捗: 実装完了・`develop`へマージ済み（元v0.3.6、最終的にv0.3.7としてまとめて公開）。`options.html`の
+  2つのセレクトに7言語を追加。`background.js`の`normalizeDeepLSourceLanguage()`/`normalizeDeepLTargetLanguage()`
+  （ポルトガル語はPT-BR地域指定）・`languageLabel()`、`transcriber.js`の`languageNames`（Gemini用）を更新。
+  マージ後にブランチは削除済み。詳細: `docs/feature-more-languages.md`
 - 検証: `node --check`（background.js/transcriber.js）、`manifest.json`のJSON妥当性は通過。
-  実ブラウザでの動作確認は**未実施**。
-- 次の予定: 実ブラウザでの動作確認は次の作業者・ユーザーが行うこと。
+  実ブラウザでの動作確認は**未実施のまま公開**。<https://github.com/KAWAchan-jp/Stream-Speech-Layer/releases/tag/v0.3.7>
+- 次の予定: 実ブラウザでの動作確認（特にDeepL×ポルトガル語）は次の作業者・ユーザーが行うこと。
 
-### fix/hallucination-repeat-filter — 担当: Claude Code（完了・developへマージ済み）
+### fix/hallucination-repeat-filter — 担当: Claude Code（完了・developへマージ済み・GitHub Release公開済み）
 - 役割: 認識結果に「ほぼ同一文の反復」が出る場合（Whisperの典型的なハルシネーション）を検出して破棄する。
   ユーザーから、配信音声＝英語／翻訳言語＝日本語の設定で使用中、字幕に意味不明な日本語の反復文が
   表示されるとの報告を受けた。
-- 進捗: 実装完了・`develop` へマージ済み（v0.3.5）。`transcriber.js` の `isLikelyHallucination()` に
-  `hasRepeatedSentenceLoop()`（文単位の類似度判定による反復検出）を追加。既存の定型文完全一致チェックは維持。
-  「カタカナの無意味な単語列」型のハルシネーションは誤検知リスクが高いため今回は対象外
-  （ユーザーと確認済み・スコープ外）。マージ後にブランチは削除済み。詳細: `docs/feature-fix-hallucination-repeat-filter.md`
+- 進捗: 実装完了・`develop` へマージ済み（元v0.3.5、最終的にv0.3.7としてまとめて公開）。`transcriber.js` の
+  `isLikelyHallucination()` に `hasRepeatedSentenceLoop()`（文単位の類似度判定による反復検出）を追加。
+  既存の定型文完全一致チェックは維持。「カタカナの無意味な単語列」型のハルシネーションは誤検知リスクが
+  高いため今回は対象外（ユーザーと確認済み・スコープ外）。マージ後にブランチは削除済み。
+  詳細: `docs/feature-fix-hallucination-repeat-filter.md`
 - 検証: `node --check transcriber.js`、`manifest.json`のJSON妥当性、Node.js上でのロジック手動検証
   （反復文=検出、通常会話文・短い相槌・実際にありうる感謝の反復=誤検知しない）は通過。
-  実ブラウザでの動作確認は**未実施**。
+  実ブラウザでの動作確認は**未実施のまま公開**。<https://github.com/KAWAchan-jp/Stream-Speech-Layer/releases/tag/v0.3.7>
 - 次の予定: 実ブラウザでの動作確認は次の作業者・ユーザーが行うこと。
 
-### fix/stale-session-lockout — 担当: Claude Code（コード実装完了・developへローカルマージ済み・GitHub Releaseは取り消し済み）
+### fix/stale-session-lockout — 担当: Claude Code（完了・developへマージ済み・GitHub Release公開済み）
 - 役割: 「停止せずにタブ/ウィンドウを閉じたあとなど、開始ボタンが押せない時がある」不具合を修正する。
   v0.3.3で追加した「別タブで実行中なら開始ボタン無効化」ロジックが、MV3 Service Worker再起動により
   storageに残るstale状態（閉じたタブが実行中扱いのまま）と組み合わさり、開始ボタンが永久に無効化される
   回帰的症状だった。
-- 進捗: 実装完了・`develop` へマージ済み（v0.3.4）。`background.js` に `isTabAlive()` / `reconcileStaleSession()`
-  を追加し、`chrome.tabs.onRemoved`・`startCapture()`・`getState`ハンドラ・`chrome.runtime.onStartup` の
-  4箇所でstale状態を自己修復するようにした。`chrome.storage.local` を状態の正本として扱う設計に変更。
-  popup.js は無改修。詳細: `docs/feature-fix-stale-session-lockout.md`
-- **注意**: GitHub Release v0.3.4は作成後にユーザー指示で取り消し済み（他の問題＝ハルシネーション報告を
-  先に直すため）。リモート`develop`もpush前の状態に戻し、タグも削除済み。**ローカルの`develop`ブランチには
-  このマージ済みコード（コミット）がそのまま残っている**。次にリリースする際は、このコードも含めて
-  まとめて公開される想定。
-- 検証: `node --check background.js`、`manifest.json`のJSON妥当性は通過。実ブラウザでの動作確認は**未実施**。
-- 次の予定: 他の修正と合わせて実機確認後、改めてGitHub Releaseを作成する。
+- 進捗: 実装完了・`develop` へマージ済み（元v0.3.4、最終的にv0.3.7としてまとめて公開）。`background.js` に
+  `isTabAlive()` / `reconcileStaleSession()` を追加し、`chrome.tabs.onRemoved`・`startCapture()`・
+  `getState`ハンドラ・`chrome.runtime.onStartup` の4箇所でstale状態を自己修復するようにした。
+  `chrome.storage.local` を状態の正本として扱う設計に変更。popup.js は無改修。
+  詳細: `docs/feature-fix-stale-session-lockout.md`
+- 経緯: 一度v0.3.4として単独リリースを作成したが、ユーザーから「他にも問題が見つかった」との指摘で
+  リリース前に取り消し、他の修正（ハルシネーション反復検出・対応言語追加・オーバーレイクリア）と
+  まとめてv0.3.7として公開した。
+- 検証: `node --check background.js`、`manifest.json`のJSON妥当性は通過。実ブラウザでの動作確認は**未実施のまま公開**。
+  <https://github.com/KAWAchan-jp/Stream-Speech-Layer/releases/tag/v0.3.7>
+- 次の予定: ユーザーが実機で動作確認すること。
 
 ### fix/tab-scoped-overlay — 担当: Claude Code（完了・developへマージ済み・GitHub Release公開済み）
 - 役割: 翻訳を開始したタブ以外にも翻訳ウィンドウが表示される不具合を修正し、
@@ -97,15 +100,16 @@
 - 次の予定: 追加作業なし。マージ後にブランチは削除。
 
 ### develop — 統合用（共有）
-- **GitHub Releaseとして公開済みなのは `v0.3.3` まで**（`fix/tab-scoped-overlay` マージ済み）。
-  `stream-speech-layer-v0.3.3.zip` / `stream-speech-layer-uv-faster-whisper-v0.3.3.zip` を添付。
+- バージョンは `extension/manifest.json` の `version` で管理。現在 **0.3.7**。リモート・ローカルとも同期済み。
+- 直近: 以下4件をまとめて `v0.3.7` として GitHub Release 公開済み（Latest指定）。
+  - タブ終了後にstale状態が残り開始ボタンが押せなくなる問題の修正（`fix/stale-session-lockout`）
+  - 認識結果の反復ハルシネーション検出（`fix/hallucination-repeat-filter`）
+  - 配信音声・翻訳先の対応言語を7言語追加（`feature/more-languages`）
+  - 開始時の翻訳ウィンドウ前回内容クリア（`fix/clear-overlay-on-start`）
+  `stream-speech-layer-v0.3.7.zip`（拡張機能本体） / `stream-speech-layer-uv-faster-whisper-v0.3.7.zip`
+  （Faster-Whisperローカルサーバー、任意コンポーネント）を添付。
+  <https://github.com/KAWAchan-jp/Stream-Speech-Layer/releases/tag/v0.3.7>
   実ブラウザでの動作確認はまだのため、継続して要確認。
-- **ローカルの`develop`ブランチは `fix/stale-session-lockout`（v0.3.4相当）・`fix/hallucination-repeat-filter`
-  （v0.3.5）・`feature/more-languages`（v0.3.6）までマージ済み**だが、GitHub Releaseはユーザー指示で
-  取り消し済み（他の問題を先に直すため）。リモートの`develop`はv0.3.3の状態（`3854d7f`）のまま。
-  次にリリースする際は、ローカルに積み上がった未リリース分（stale-session-lockout、
-  hallucination-repeat-filter、対応言語追加、clear-overlay-on-start）をまとめて公開する想定。
-  `extension/manifest.json` の `version` は現在 **0.3.7**（作業中の`fix/clear-overlay-on-start`ブランチ）。
 
 ### master — 本番。直接作業しない。
 
@@ -113,6 +117,13 @@
 
 ## 申し送り（時系列・新しい順）
 
+- **2026-07-09 Claude Code**: ユーザーの指示で `fix/clear-overlay-on-start` を含む4件（stale-session-lockout、
+  hallucination-repeat-filter、対応言語追加、clear-overlay-on-start）をまとめて `v0.3.7` として
+  GitHub Releaseに公開（Latest指定、prerelease解除）。`develop`をリモートへpush、タグ`v0.3.7`をpush、
+  GitHub API（PowerShell `Invoke-RestMethod` + `$env:GITHUB_TOKEN`）でリリース作成とZIP添付を実施。
+  <https://github.com/KAWAchan-jp/Stream-Speech-Layer/releases/tag/v0.3.7>
+  実ブラウザでの動作確認はいずれも未実施のまま公開。次の作業者・ユーザーは各`docs/feature-*.md`の
+  検証手順（特にstale-session-lockoutのService Worker再起動シナリオ、DeepL×ポルトガル語）を確認してください。
 - **2026-07-09 Claude Code**: `feature/more-languages` を `develop` へマージ（v0.3.6、GitHub Release未公開、
   引き続きテスト中のため保留）。続けてユーザーから「開始ボタンを押したときに翻訳ウィンドウに前回の内容が
   残っている。クリアした状態から始めたい」との報告を受け`fix/clear-overlay-on-start`を作成。
