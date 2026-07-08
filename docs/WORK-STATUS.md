@@ -7,6 +7,8 @@
 - 新しいブランチで作業を始めたら、このファイルに欄を追加する
 - ブランチ作業の詳細（目的・実装方針・変更内容・検証結果・未確認事項）は
   `docs/feature-<ブランチ名>.md` に残す運用（`CLAUDE.md` 参照）。ここには要点とリンクだけを書く
+- リリースでZIPファイルを添付した場合は、ファイル名だけでなく各ZIPが何か（拡張機能本体／
+  Faster-Whisperローカルサーバーなど任意コンポーネント）を一言添える
 - 最終更新: 2026-07-09 / by Claude Code（v0.3.3 リリース完了）
 
 ---
@@ -60,7 +62,9 @@
 - **2026-07-09 Claude Code**: `fix/tab-scoped-overlay` を `develop` へマージし、ユーザー指示により
   実機動作確認前に `v0.3.3` を GitHub Release として公開（Latest指定）。
   <https://github.com/KAWAchan-jp/Stream-Speech-Layer/releases/tag/v0.3.3>
-  `stream-speech-layer-v0.3.3.zip` / `stream-speech-layer-uv-faster-whisper-v0.3.3.zip` を添付済み。
+  `stream-speech-layer-v0.3.3.zip`（拡張機能本体） /
+  `stream-speech-layer-uv-faster-whisper-v0.3.3.zip`（Faster-Whisperローカルサーバー、任意コンポーネント。
+  API キー不要・外部送信なしで文字起こしできる。拡張機能とは別にユーザーのPCで起動する）を添付済み。
   マージ後にブランチは削除済み。**次の作業者・ユーザーへ**: `docs/feature-fix-tab-scoped-overlay.md` の
   検証手順（複数タブでの表示範囲・別タブからの開始拒否・警告表示）を実機で確認し、結果を追記してください。
 - **2026-07-09 Claude Code**: `fix/tab-scoped-overlay` を作成。ユーザーから「翻訳を開始したタブ以外にも
