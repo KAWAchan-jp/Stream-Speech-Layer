@@ -9,24 +9,40 @@
   `docs/feature-<ブランチ名>.md` に残す運用（`CLAUDE.md` 参照）。ここには要点とリンクだけを書く
 - リリースでZIPファイルを添付した場合は、ファイル名だけでなく各ZIPが何か（拡張機能本体／
   Faster-Whisperローカルサーバーなど任意コンポーネント）を一言添える
-- 最終更新: 2026-07-09 / by Claude Code（fix/stale-session-lockout 着手）
+- 最終更新: 2026-07-09 / by Claude Code（fix/hallucination-repeat-filter 着手）
 
 ---
 
 ## ブランチ別ステータス
 
-### fix/stale-session-lockout — 担当: Claude Code（実装完了・実機確認待ち）
+### fix/hallucination-repeat-filter — 担当: Claude Code（実装完了・実機確認待ち）
+- 役割: 認識結果に「ほぼ同一文の反復」が出る場合（Whisperの典型的なハルシネーション）を検出して破棄する。
+  ユーザーから、配信音声＝英語／翻訳言語＝日本語の設定で使用中、字幕に意味不明な日本語の反復文が
+  表示されるとの報告を受けた。
+- 進捗: 実装完了（v0.3.5）。`transcriber.js` の `isLikelyHallucination()` に `hasRepeatedSentenceLoop()`
+  （文単位の類似度判定による反復検出）を追加。既存の定型文完全一致チェックは維持。
+  「カタカナの無意味な単語列」型のハルシネーションは誤検知リスクが高いため今回は対象外
+  （ユーザーと確認済み・スコープ外）。詳細: `docs/feature-fix-hallucination-repeat-filter.md`
+- 検証: `node --check transcriber.js`、`manifest.json`のJSON妥当性、Node.js上でのロジック手動検証
+  （反復文=検出、通常会話文・短い相槌・実際にありうる感謝の反復=誤検知しない）は通過。
+  実ブラウザでの動作確認は**未実施**。
+- 次の予定: 実ブラウザでの動作確認後 `develop` へマージ。
+
+### fix/stale-session-lockout — 担当: Claude Code（コード実装完了・developへローカルマージ済み・GitHub Releaseは取り消し済み）
 - 役割: 「停止せずにタブ/ウィンドウを閉じたあとなど、開始ボタンが押せない時がある」不具合を修正する。
   v0.3.3で追加した「別タブで実行中なら開始ボタン無効化」ロジックが、MV3 Service Worker再起動により
   storageに残るstale状態（閉じたタブが実行中扱いのまま）と組み合わさり、開始ボタンが永久に無効化される
   回帰的症状だった。
-- 進捗: 実装完了（v0.3.4）。`background.js` に `isTabAlive()` / `reconcileStaleSession()` を追加し、
-  `chrome.tabs.onRemoved`・`startCapture()`・`getState`ハンドラ・`chrome.runtime.onStartup` の4箇所で
-  stale状態を自己修復するようにした。`chrome.storage.local` を状態の正本として扱う設計に変更。
+- 進捗: 実装完了・`develop` へマージ済み（v0.3.4）。`background.js` に `isTabAlive()` / `reconcileStaleSession()`
+  を追加し、`chrome.tabs.onRemoved`・`startCapture()`・`getState`ハンドラ・`chrome.runtime.onStartup` の
+  4箇所でstale状態を自己修復するようにした。`chrome.storage.local` を状態の正本として扱う設計に変更。
   popup.js は無改修。詳細: `docs/feature-fix-stale-session-lockout.md`
+- **注意**: GitHub Release v0.3.4は作成後にユーザー指示で取り消し済み（他の問題＝ハルシネーション報告を
+  先に直すため）。リモート`develop`もpush前の状態に戻し、タグも削除済み。**ローカルの`develop`ブランチには
+  このマージ済みコード（コミット）がそのまま残っている**。次にリリースする際は、このコードも含めて
+  まとめて公開される想定。
 - 検証: `node --check background.js`、`manifest.json`のJSON妥当性は通過。実ブラウザでの動作確認は**未実施**。
-- 次の予定: 実機確認（Service Worker再起動後のタブクローズ・ウィンドウクローズ・ブラウザ再起動の各シナリオ）
-  を行ってから `develop` へマージ。
+- 次の予定: 他の修正と合わせて実機確認後、改めてGitHub Releaseを作成する。
 
 ### fix/tab-scoped-overlay — 担当: Claude Code（完了・developへマージ済み・GitHub Release公開済み）
 - 役割: 翻訳を開始したタブ以外にも翻訳ウィンドウが表示される不具合を修正し、
@@ -60,11 +76,14 @@
 - 次の予定: 追加作業なし。マージ後にブランチは削除。
 
 ### develop — 統合用（共有）
-- バージョンは `extension/manifest.json` の `version` で管理。現在 **0.3.3**
-  （`fix/tab-scoped-overlay` マージ済み）。
-- 直近: 翻訳ウィンドウのタブ限定修正を含む `v0.3.3` を GitHub Release として公開済み（Latest指定）。
+- **GitHub Releaseとして公開済みなのは `v0.3.3` まで**（`fix/tab-scoped-overlay` マージ済み）。
   `stream-speech-layer-v0.3.3.zip` / `stream-speech-layer-uv-faster-whisper-v0.3.3.zip` を添付。
   実ブラウザでの動作確認はまだのため、継続して要確認。
+- **ローカルの`develop`ブランチは `fix/stale-session-lockout`（v0.3.4相当）までマージ済み**だが、
+  GitHub Releaseはユーザー指示で取り消し済み（他の問題を先に直すため）。リモートの`develop`は
+  v0.3.3の状態（`3854d7f`）のまま。次にリリースする際は、ローカルに積み上がった未リリース分
+  （stale-session-lockout、hallucination-repeat-filter等）をまとめて公開する想定。
+  `extension/manifest.json` の `version` は現在 **0.3.5**（作業中の`fix/hallucination-repeat-filter`ブランチ）。
 
 ### master — 本番。直接作業しない。
 
@@ -72,6 +91,17 @@
 
 ## 申し送り（時系列・新しい順）
 
+- **2026-07-09 Claude Code**: v0.3.4のGitHub Release作成を開始したところ、ユーザーから「他にも問題が見つかった」
+  とストップがかかり、リリース作成前だったため実害なし。ただし既にpush済みだった`develop`ブランチの更新と
+  `v0.3.4`タグはユーザー指示で取り消した（リモート`develop`をpush前の`3854d7f`へforce-with-leaseで戻し、
+  リモート・ローカル両方の`v0.3.4`タグを削除）。**ローカルの`develop`ブランチのコミット自体は削除していない**
+  （stale-session-lockout修正のコードを残し、追加の問題を直してからまとめてリリースする方針）。
+  続けてユーザーから、認識結果に反復するハルシネーションが出る不具合の報告を受け`fix/hallucination-repeat-filter`
+  を作成。`transcriber.js`の`isLikelyHallucination()`に文単位の反復検出（`hasRepeatedSentenceLoop()`）を追加した
+  （v0.3.5）。あわせて「配信音声・翻訳先の対応言語を増やしてほしい」との要望も受け、中国語・フランス語・
+  ドイツ語・スペイン語・ポルトガル語・ロシア語・イタリア語の7言語を追加する`feature/more-languages`を
+  別途着手する予定（本コミット時点では未着手）。実ブラウザでの動作確認はいずれも未実施のため、
+  次の作業者・ユーザーは各`docs/feature-*.md`の検証手順を確認してください。
 - **2026-07-09 Claude Code**: `fix/stale-session-lockout` を作成。ユーザーから「停止せずにウィンドウを終了した
   あとなど開始ボタンが押せない時がある」との報告を受け調査。v0.3.3で追加した「別タブで実行中なら開始ボタン
   無効化」ロジックが、MV3 Service Worker再起動でインメモリ`activeSession`が失われることと組み合わさり、
