@@ -14,6 +14,7 @@ const timerValueEl = document.getElementById('timerValue');
 const timerCountdownEl = document.getElementById('timerCountdown');
 
 let countdownInterval = null;
+let blockedByOtherTab = false;
 
 const RECOGNITION_ENGINE_LABELS = {
   groq: 'Groq Whisper API',
@@ -99,12 +100,24 @@ function renderTimer(state) {
 }
 
 async function refreshState() {
-  const response = await chrome.runtime.sendMessage({ type: 'getState' });
+  const [response, [currentTab]] = await Promise.all([
+    chrome.runtime.sendMessage({ type: 'getState' }),
+    chrome.tabs.query({ active: true, currentWindow: true })
+  ]);
   if (!response?.ok) return;
 
   const isEnabled = Boolean(response.enabled);
-  statusEl.textContent = isEnabled ? '起動中' : '停止中';
-  toggleButton.textContent = isEnabled ? '停止する' : '開始する';
+  blockedByOtherTab = isEnabled && Boolean(response.activeTabId) && response.activeTabId !== currentTab?.id;
+
+  if (blockedByOtherTab) {
+    statusEl.textContent = `他のタブで実行中: ${response.activeTitle || ''}`;
+    toggleButton.textContent = '開始する';
+    toggleButton.disabled = true;
+  } else {
+    statusEl.textContent = isEnabled ? '起動中' : '停止中';
+    toggleButton.textContent = isEnabled ? '停止する' : '開始する';
+    toggleButton.disabled = false;
+  }
 
   renderTimer(response);
   renderEngines(response);
@@ -125,6 +138,8 @@ async function refreshState() {
 }
 
 toggleButton.addEventListener('click', async () => {
+  if (blockedByOtherTab) return;
+
   toggleButton.disabled = true;
   statusEl.textContent = '処理中...';
 
@@ -136,7 +151,7 @@ toggleButton.addEventListener('click', async () => {
     }
     await refreshState();
   } finally {
-    toggleButton.disabled = false;
+    toggleButton.disabled = blockedByOtherTab;
   }
 });
 

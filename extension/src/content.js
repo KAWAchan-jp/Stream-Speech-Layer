@@ -9,6 +9,7 @@ let dragState = null;
 let resizeHandle = null;
 let resizeState = null;
 let isEnabled = false;
+let ownTabId = null;
 
 const DEFAULT_OVERLAY_OFFSET = 16;
 const MIN_OVERLAY_WIDTH = 200;
@@ -361,15 +362,30 @@ function applyEnabledState(enabled) {
   }
 }
 
+// content scriptは自分のtabIdを直接参照できないため、backgroundに問い合わせて覚えておく
+async function resolveOwnTabId() {
+  if (ownTabId !== null) return ownTabId;
+  try {
+    const response = await chrome.runtime.sendMessage({ type: 'get-own-tab-id' });
+    ownTabId = response?.tabId ?? null;
+  } catch (_) {
+    ownTabId = null;
+  }
+  return ownTabId;
+}
+
 async function syncState() {
-  const state = await chrome.storage.local.get(['isEnabled', 'lastTranscript', 'lastTranslation']);
-  applyEnabledState(Boolean(state.isEnabled));
-  if (state.isEnabled && state.lastTranscript) setTranscript(state.lastTranscript, state.lastTranslation);
+  const tabId = await resolveOwnTabId();
+  const state = await chrome.storage.local.get(['isEnabled', 'activeTabId', 'lastTranscript', 'lastTranslation']);
+  // isEnabledはタブ非依存のグローバルフラグのため、activeTabIdが自タブと一致する場合のみ表示する
+  const isActiveTab = Boolean(state.isEnabled) && state.activeTabId === tabId;
+  applyEnabledState(isActiveTab);
+  if (isActiveTab && state.lastTranscript) setTranscript(state.lastTranscript, state.lastTranslation);
 }
 
 chrome.storage.onChanged.addListener((changes, areaName) => {
   if (areaName !== 'local') return;
-  if ('isEnabled' in changes) applyEnabledState(Boolean(changes.isEnabled.newValue));
+  if ('isEnabled' in changes || 'activeTabId' in changes) syncState().catch(() => {});
   if ('lastTranscript' in changes && changes.lastTranscript.newValue) {
     chrome.storage.local.get(['lastTranslation']).then((state) => {
       setTranscript(changes.lastTranscript.newValue, state.lastTranslation);

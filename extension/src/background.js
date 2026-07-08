@@ -120,7 +120,7 @@ async function startCapture(tab) {
   }
 
   if (activeSession?.tabId && activeSession.tabId !== tab.id) {
-    await stopCapture();
+    throw new Error(`他のタブ（${activeSession.title || activeSession.url}）で実行中です。先に停止してください。`);
   }
 
   await ensureOffscreenDocument();
@@ -558,6 +558,11 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     return true;
   }
 
+  if (message.type === 'get-own-tab-id') {
+    sendResponse({ ok: true, tabId: sender.tab?.id ?? null });
+    return true;
+  }
+
   if (message.type === 'getState') {
     storageGet([
       'isEnabled',
@@ -566,6 +571,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       'lastTranslation',
       'activeTitle',
       'activeUrl',
+      'activeTabId',
       'transcriptionProvider',
       'sourceLanguage',
       'groqApiKey',
@@ -588,6 +594,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         lastTranslation: result.lastTranslation || '',
         activeTitle: result.activeTitle || '',
         activeUrl: result.activeUrl || '',
+        activeTabId: result.activeTabId || null,
         transcriptionProvider: result.transcriptionProvider || 'none',
         sourceLanguage: result.sourceLanguage || 'ja',
         hasGroqApiKey: Boolean(result.groqApiKey),

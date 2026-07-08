@@ -7,11 +7,21 @@
 - 新しいブランチで作業を始めたら、このファイルに欄を追加する
 - ブランチ作業の詳細（目的・実装方針・変更内容・検証結果・未確認事項）は
   `docs/feature-<ブランチ名>.md` に残す運用（`CLAUDE.md` 参照）。ここには要点とリンクだけを書く
-- 最終更新: 2026-07-09 / by Claude Code（v0.3.2 リリース完了）
+- 最終更新: 2026-07-09 / by Claude Code（fix/tab-scoped-overlay 着手）
 
 ---
 
 ## ブランチ別ステータス
+
+### fix/tab-scoped-overlay — 担当: Claude Code（実装完了・実機確認待ち）
+- 役割: 翻訳を開始したタブ以外にも翻訳ウィンドウが表示される不具合を修正し、
+  別タブから開始した際に既存セッションを黙って切り替えてしまう挙動（多重起動的バグ）を防ぐ。
+- 進捗: 実装完了（v0.3.3）。`background.js`（`startCapture`の別タブ拒否・`get-own-tab-id`・`getState`への`activeTabId`追加）、
+  `content.js`（自タブID判定によるオーバーレイ表示制御）、`popup.js`（他タブ実行中の警告表示・開始ボタン無効化）を修正。
+  詳細: `docs/feature-fix-tab-scoped-overlay.md`
+- 検証: `node --check`（background.js/content.js/popup.js）、`manifest.json`のJSON妥当性は通過。
+  実ブラウザでの動作確認は**未実施**。
+- 次の予定: 実機確認（複数タブでの表示範囲・別タブからの開始拒否・警告表示）を行ってから `develop` へマージ。
 
 ### feature/all-sites-support — 担当: Claude Code（完了・developへマージ済み）
 - 役割: タブ音声取得の対象サイト制限（YouTube/Twitch限定）を撤廃し、全サイトで使えるようにする。
@@ -45,6 +55,12 @@
 
 ## 申し送り（時系列・新しい順）
 
+- **2026-07-09 Claude Code**: `fix/tab-scoped-overlay` を作成。ユーザーから「翻訳を開始したタブ以外にも
+  翻訳ウィンドウが出てしまう」との指摘を受け、`content.js` にタブID判定を追加してオーバーレイの表示範囲を
+  開始タブのみに限定。あわせて `background.js` の `startCapture()` が別タブから開始要求を受けると
+  黙ってセッションを切り替えていた挙動をやめ、エラーで拒否するように変更。`popup.js` は他タブで実行中の場合に
+  「他のタブで実行中」と表示し開始ボタンを無効化するようにした（v0.3.3）。実機での動作確認はまだのため、
+  次の作業者・ユーザーは `docs/feature-fix-tab-scoped-overlay.md` の検証手順を実施してください。
 - **2026-07-09 Claude Code**: 開発版 `v0.3.2` をGitHub Releaseとして公開（Latest指定、prerelease解除）。
   タグ `v0.3.2` を push し、`build-release.ps1` / `build-uv-release.ps1` でZIPを作成、
   GitHub API（PowerShell `Invoke-RestMethod` + `$env:GITHUB_TOKEN`）でリリース作成とZIP添付を実施。
