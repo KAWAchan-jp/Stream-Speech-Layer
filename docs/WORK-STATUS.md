@@ -9,11 +9,24 @@
   `docs/feature-<ブランチ名>.md` に残す運用（`CLAUDE.md` 参照）。ここには要点とリンクだけを書く
 - リリースでZIPファイルを添付した場合は、ファイル名だけでなく各ZIPが何か（拡張機能本体／
   Faster-Whisperローカルサーバーなど任意コンポーネント）を一言添える
-- 最終更新: 2026-07-09 / by Claude Code（v0.3.3 リリース完了）
+- 最終更新: 2026-07-09 / by Claude Code（fix/stale-session-lockout 着手）
 
 ---
 
 ## ブランチ別ステータス
+
+### fix/stale-session-lockout — 担当: Claude Code（実装完了・実機確認待ち）
+- 役割: 「停止せずにタブ/ウィンドウを閉じたあとなど、開始ボタンが押せない時がある」不具合を修正する。
+  v0.3.3で追加した「別タブで実行中なら開始ボタン無効化」ロジックが、MV3 Service Worker再起動により
+  storageに残るstale状態（閉じたタブが実行中扱いのまま）と組み合わさり、開始ボタンが永久に無効化される
+  回帰的症状だった。
+- 進捗: 実装完了（v0.3.4）。`background.js` に `isTabAlive()` / `reconcileStaleSession()` を追加し、
+  `chrome.tabs.onRemoved`・`startCapture()`・`getState`ハンドラ・`chrome.runtime.onStartup` の4箇所で
+  stale状態を自己修復するようにした。`chrome.storage.local` を状態の正本として扱う設計に変更。
+  popup.js は無改修。詳細: `docs/feature-fix-stale-session-lockout.md`
+- 検証: `node --check background.js`、`manifest.json`のJSON妥当性は通過。実ブラウザでの動作確認は**未実施**。
+- 次の予定: 実機確認（Service Worker再起動後のタブクローズ・ウィンドウクローズ・ブラウザ再起動の各シナリオ）
+  を行ってから `develop` へマージ。
 
 ### fix/tab-scoped-overlay — 担当: Claude Code（完了・developへマージ済み・GitHub Release公開済み）
 - 役割: 翻訳を開始したタブ以外にも翻訳ウィンドウが表示される不具合を修正し、
@@ -59,6 +72,14 @@
 
 ## 申し送り（時系列・新しい順）
 
+- **2026-07-09 Claude Code**: `fix/stale-session-lockout` を作成。ユーザーから「停止せずにウィンドウを終了した
+  あとなど開始ボタンが押せない時がある」との報告を受け調査。v0.3.3で追加した「別タブで実行中なら開始ボタン
+  無効化」ロジックが、MV3 Service Worker再起動でインメモリ`activeSession`が失われることと組み合わさり、
+  storageに残るstale状態（閉じたタブが実行中扱いのまま）により開始ボタンが永久に無効化される回帰的症状と判明。
+  `background.js`に`reconcileStaleSession()`を追加し、`chrome.storage.local`を状態の正本として扱い
+  `tabs.onRemoved`・`startCapture()`・`getState`・`onStartup`の4箇所で自己修復するようにした（v0.3.4）。
+  実機での動作確認はまだのため、次の作業者・ユーザーは`docs/feature-fix-stale-session-lockout.md`の
+  検証手順（特にService Worker再起動後のタブクローズ）を実施してください。
 - **2026-07-09 Claude Code**: `fix/tab-scoped-overlay` を `develop` へマージし、ユーザー指示により
   実機動作確認前に `v0.3.3` を GitHub Release として公開（Latest指定）。
   <https://github.com/KAWAchan-jp/Stream-Speech-Layer/releases/tag/v0.3.3>
