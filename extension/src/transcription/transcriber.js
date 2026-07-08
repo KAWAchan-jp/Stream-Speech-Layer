@@ -242,7 +242,13 @@ function buildGeminiTranscriptionPrompt(language, targetLanguage) {
     en: '英語',
     ko: '韓国語',
     'zh-CN': '中国語(簡体字)',
-    'zh-TW': '中国語(繁体字)'
+    'zh-TW': '中国語(繁体字)',
+    fr: 'フランス語',
+    de: 'ドイツ語',
+    es: 'スペイン語',
+    pt: 'ポルトガル語',
+    ru: 'ロシア語',
+    it: 'イタリア語'
   };
   const hint = language && language !== 'auto' && languageNames[language]
     ? `音声は主に${languageNames[language]}です。`

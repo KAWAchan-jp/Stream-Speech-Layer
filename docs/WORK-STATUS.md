@@ -9,24 +9,34 @@
   `docs/feature-<ブランチ名>.md` に残す運用（`CLAUDE.md` 参照）。ここには要点とリンクだけを書く
 - リリースでZIPファイルを添付した場合は、ファイル名だけでなく各ZIPが何か（拡張機能本体／
   Faster-Whisperローカルサーバーなど任意コンポーネント）を一言添える
-- 最終更新: 2026-07-09 / by Claude Code（fix/hallucination-repeat-filter 着手）
+- 最終更新: 2026-07-09 / by Claude Code（feature/more-languages 着手）
 
 ---
 
 ## ブランチ別ステータス
 
-### fix/hallucination-repeat-filter — 担当: Claude Code（実装完了・実機確認待ち）
+### feature/more-languages — 担当: Claude Code（実装完了・実機確認待ち）
+- 役割: 配信音声の言語・翻訳先言語の選択肢を増やす。ユーザーから「対応言語を増やしてほしい」との
+  要望を受け、中国語・フランス語・ドイツ語・スペイン語・ポルトガル語・ロシア語・イタリア語の7言語を追加。
+- 進捗: 実装完了（v0.3.6）。`options.html`の2つのセレクトに7言語を追加。`background.js`の
+  `normalizeDeepLSourceLanguage()`/`normalizeDeepLTargetLanguage()`（ポルトガル語はPT-BR地域指定）・
+  `languageLabel()`、`transcriber.js`の`languageNames`（Gemini用）を更新。詳細: `docs/feature-more-languages.md`
+- 検証: `node --check`（background.js/transcriber.js）、`manifest.json`のJSON妥当性は通過。
+  実ブラウザでの動作確認は**未実施**。
+- 次の予定: 実ブラウザで各認識・翻訳エンジンでの動作確認後 `develop` へマージ。
+
+### fix/hallucination-repeat-filter — 担当: Claude Code（完了・developへマージ済み）
 - 役割: 認識結果に「ほぼ同一文の反復」が出る場合（Whisperの典型的なハルシネーション）を検出して破棄する。
   ユーザーから、配信音声＝英語／翻訳言語＝日本語の設定で使用中、字幕に意味不明な日本語の反復文が
   表示されるとの報告を受けた。
-- 進捗: 実装完了（v0.3.5）。`transcriber.js` の `isLikelyHallucination()` に `hasRepeatedSentenceLoop()`
-  （文単位の類似度判定による反復検出）を追加。既存の定型文完全一致チェックは維持。
+- 進捗: 実装完了・`develop` へマージ済み（v0.3.5）。`transcriber.js` の `isLikelyHallucination()` に
+  `hasRepeatedSentenceLoop()`（文単位の類似度判定による反復検出）を追加。既存の定型文完全一致チェックは維持。
   「カタカナの無意味な単語列」型のハルシネーションは誤検知リスクが高いため今回は対象外
-  （ユーザーと確認済み・スコープ外）。詳細: `docs/feature-fix-hallucination-repeat-filter.md`
+  （ユーザーと確認済み・スコープ外）。マージ後にブランチは削除済み。詳細: `docs/feature-fix-hallucination-repeat-filter.md`
 - 検証: `node --check transcriber.js`、`manifest.json`のJSON妥当性、Node.js上でのロジック手動検証
   （反復文=検出、通常会話文・短い相槌・実際にありうる感謝の反復=誤検知しない）は通過。
   実ブラウザでの動作確認は**未実施**。
-- 次の予定: 実ブラウザでの動作確認後 `develop` へマージ。
+- 次の予定: 実ブラウザでの動作確認は次の作業者・ユーザーが行うこと。
 
 ### fix/stale-session-lockout — 担当: Claude Code（コード実装完了・developへローカルマージ済み・GitHub Releaseは取り消し済み）
 - 役割: 「停止せずにタブ/ウィンドウを閉じたあとなど、開始ボタンが押せない時がある」不具合を修正する。
@@ -79,11 +89,11 @@
 - **GitHub Releaseとして公開済みなのは `v0.3.3` まで**（`fix/tab-scoped-overlay` マージ済み）。
   `stream-speech-layer-v0.3.3.zip` / `stream-speech-layer-uv-faster-whisper-v0.3.3.zip` を添付。
   実ブラウザでの動作確認はまだのため、継続して要確認。
-- **ローカルの`develop`ブランチは `fix/stale-session-lockout`（v0.3.4相当）までマージ済み**だが、
-  GitHub Releaseはユーザー指示で取り消し済み（他の問題を先に直すため）。リモートの`develop`は
-  v0.3.3の状態（`3854d7f`）のまま。次にリリースする際は、ローカルに積み上がった未リリース分
-  （stale-session-lockout、hallucination-repeat-filter等）をまとめて公開する想定。
-  `extension/manifest.json` の `version` は現在 **0.3.5**（作業中の`fix/hallucination-repeat-filter`ブランチ）。
+- **ローカルの`develop`ブランチは `fix/stale-session-lockout`（v0.3.4相当）・`fix/hallucination-repeat-filter`
+  （v0.3.5）までマージ済み**だが、GitHub Releaseはユーザー指示で取り消し済み（他の問題を先に直すため）。
+  リモートの`develop`はv0.3.3の状態（`3854d7f`）のまま。次にリリースする際は、ローカルに積み上がった
+  未リリース分（stale-session-lockout、hallucination-repeat-filter、対応言語追加）をまとめて公開する想定。
+  `extension/manifest.json` の `version` は現在 **0.3.6**（作業中の`feature/more-languages`ブランチ）。
 
 ### master — 本番。直接作業しない。
 
@@ -91,6 +101,15 @@
 
 ## 申し送り（時系列・新しい順）
 
+- **2026-07-09 Claude Code**: `fix/hallucination-repeat-filter` を `develop` へマージ（v0.3.5、GitHub Release未公開）。
+  続けてユーザーから「配信言語、翻訳言語ともに対応言語を増やしてほしい」との要望を受け`feature/more-languages`
+  を作成。中国語・フランス語・ドイツ語・スペイン語・ポルトガル語・ロシア語・イタリア語の7言語を
+  `options.html`の配信音声言語・翻訳先言語の両セレクトに追加。バックエンド側（Groq/Faster-Whisper・
+  Google Translate・Gemini）はほぼ任意のISO言語コードを素通しできる作りだったためコード変更は最小限。
+  DeepLのみ`normalizeDeepLSourceLanguage()`にコードを明示追加し、ポルトガル語は翻訳先指定時に
+  `PT-BR`の地域指定が必須なため`normalizeDeepLTargetLanguage()`に個別対応した（v0.3.6）。
+  実ブラウザでの動作確認は未実施のため、次の作業者・ユーザーは`docs/feature-more-languages.md`の
+  検証手順（特にDeepL×ポルトガル語）を確認してください。
 - **2026-07-09 Claude Code**: v0.3.4のGitHub Release作成を開始したところ、ユーザーから「他にも問題が見つかった」
   とストップがかかり、リリース作成前だったため実害なし。ただし既にpush済みだった`develop`ブランチの更新と
   `v0.3.4`タグはユーザー指示で取り消した（リモート`develop`をpush前の`3854d7f`へforce-with-leaseで戻し、

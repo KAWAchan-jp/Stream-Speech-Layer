@@ -427,6 +427,12 @@ function languageLabel(language) {
     ko: '韓国語',
     'zh-CN': '中国語(簡体字)',
     'zh-TW': '中国語(繁体字)',
+    fr: 'フランス語',
+    de: 'ドイツ語',
+    es: 'スペイン語',
+    pt: 'ポルトガル語',
+    ru: 'ロシア語',
+    it: 'イタリア語',
     auto: '自動判定'
   }[language] || language || '自動判定';
 }
@@ -492,13 +498,21 @@ function normalizeDeepLSourceLanguage(language) {
   const map = {
     en: 'EN',
     ja: 'JA',
-    ko: 'KO'
+    ko: 'KO',
+    'zh-CN': 'ZH',
+    fr: 'FR',
+    de: 'DE',
+    es: 'ES',
+    pt: 'PT',
+    ru: 'RU',
+    it: 'IT'
   };
   return map[language] || language.toUpperCase().replace('-', '_');
 }
 
 function normalizeDeepLTargetLanguage(language) {
   if (language === 'en') return 'EN-US';
+  if (language === 'pt') return 'PT-BR';
   return normalizeDeepLSourceLanguage(language);
 }
 
