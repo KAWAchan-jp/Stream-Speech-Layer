@@ -1,7 +1,9 @@
 'use strict';
 
 const OFFSCREEN_DOCUMENT_PATH = 'src/offscreen/offscreen.html';
-const SUPPORTED_URL_PATTERN = /^https:\/\/(www\.)?(youtube\.com|twitch\.tv)\//;
+const SUPPORTED_URL_PATTERN = /^https?:\/\//;
+// tabCaptureが機能しない/権限上許可されないページ（ブラウザの拡張機能ストア）は個別に除外する
+const RESTRICTED_URL_PATTERN = /^https?:\/\/(chrome\.google\.com\/webstore|chromewebstore\.google\.com|microsoftedge\.microsoft\.com\/addons)/;
 const TRANSLATION_CACHE_MAX = 300;
 const GEMINI_MODEL = 'gemini-3.1-flash-lite';
 const GEMINI_TRANSLATION_URL = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent`;
@@ -113,8 +115,8 @@ function getMediaStreamId(targetTabId) {
 }
 
 async function startCapture(tab) {
-  if (!tab?.id || !SUPPORTED_URL_PATTERN.test(tab.url || '')) {
-    throw new Error('YouTube または Twitch のタブで開始してください');
+  if (!tab?.id || !SUPPORTED_URL_PATTERN.test(tab.url || '') || RESTRICTED_URL_PATTERN.test(tab.url || '')) {
+    throw new Error('対応していないページです（chrome:// や拡張機能ストアなどでは使用できません）');
   }
 
   if (activeSession?.tabId && activeSession.tabId !== tab.id) {

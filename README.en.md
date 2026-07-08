@@ -4,9 +4,9 @@
 
 > Turn a stream's voice into subtitles, right on the spot.
 
-A Chromium extension for Chrome / Brave that transcribes and translates the audio of a YouTube / Twitch stream tab in real time, and overlays the subtitles directly onto the stream. It also saves a log so you can look back later.
+A Chromium extension for Chrome / Brave that transcribes and translates the audio of any tab in real time, and overlays the subtitles directly onto the page. Works on any site, not just YouTube / Twitch. It also saves a log so you can look back later.
 
-![version](https://img.shields.io/badge/version-0.3.0-1565c0)
+![version](https://img.shields.io/badge/version-0.3.2-1565c0)
 ![platform](https://img.shields.io/badge/platform-Chrome%20%7C%20Brave-4c8bf5)
 ![manifest](https://img.shields.io/badge/Manifest-v3-f59e0b)
 ![status](https://img.shields.io/badge/status-development-9a3412)
@@ -24,7 +24,7 @@ A Chromium extension for Chrome / Brave that transcribes and translates the audi
 ## Who it's for
 
 - People who want to understand overseas streams with subtitles
-- People who want to add real-time subtitles to YouTube / Twitch streams
+- People who want real-time subtitles on any site with audio, not just YouTube / Twitch
 - People who want to keep a text record of what was said on a stream
 - People who want to try audio translation subtitles for free, without extra cost
 
@@ -36,8 +36,14 @@ A Chromium extension for Chrome / Brave that transcribes and translates the audi
 
 ## Target sites
 
+Works on essentially any site where a tab plays audio (except pages the browser doesn't allow extensions to run on, such as `chrome://` pages or extension stores). Verified in particular on:
+
 - YouTube / YouTube Live
 - Twitch
+
+## About permissions
+
+To show the subtitle overlay on any site, the extension requests access to all websites (Chrome shows a "Read and change all your data on all websites" warning at install time). Tab audio is only captured on the tab where the user explicitly presses "Start" in the popup.
 
 ## Installation
 
@@ -50,7 +56,7 @@ If you use a release ZIP, extract it and select the resulting `extension/` folde
 
 ## Usage
 
-1. Open a YouTube or Twitch stream page
+1. Open the page whose audio you want subtitled (not limited to YouTube or Twitch)
 2. Click the extension icon in the toolbar to open the popup
 3. From the ⚙ button at the top right of the popup, open the settings page and configure the recognition engine, stream audio language, translation, and API keys
 4. Return to the popup and press "Start"
@@ -92,7 +98,7 @@ Internally it uses `chrome.alarms` so it fires reliably even if the service work
 
 ## Implemented features
 
-- Capturing audio from the current YouTube / Twitch tab
+- Capturing audio from the current tab (works on any site)
 - Re-outputting the tab audio
 - Chunking audio with MediaRecorder
 - Speech recognition via the Groq Whisper API / Google AI Studio (Gemini API) / local Faster-Whisper server

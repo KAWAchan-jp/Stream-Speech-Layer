@@ -111,7 +111,7 @@ async function refreshState() {
 
   targetEl.textContent = response.activeTitle
     ? `対象: ${response.activeTitle}`
-    : 'YouTube / Twitch のタブで開始できます';
+    : 'タブを開いて開始できます';
 
   logEl.innerHTML = '';
   const logs = response.transcriptLog || [];

@@ -7,11 +7,20 @@
 - 新しいブランチで作業を始めたら、このファイルに欄を追加する
 - ブランチ作業の詳細（目的・実装方針・変更内容・検証結果・未確認事項）は
   `docs/feature-<ブランチ名>.md` に残す運用（`CLAUDE.md` 参照）。ここには要点とリンクだけを書く
-- 最終更新: 2026-07-05 / by Codex
+- 最終更新: 2026-07-09 / by Claude Code
 
 ---
 
 ## ブランチ別ステータス
+
+### feature/all-sites-support — 担当: Claude Code（完了・developへマージ済み）
+- 役割: タブ音声取得の対象サイト制限（YouTube/Twitch限定）を撤廃し、全サイトで使えるようにする。
+- 進捗: 実装完了・`develop` へマージ済み（v0.3.2）。`manifest.json` の `content_scripts.matches` / `host_permissions`、
+  `background.js` の `SUPPORTED_URL_PATTERN`、popup・README の文言を修正。
+  詳細: `docs/feature-all-sites-support.md`
+- 検証: `node --check`（background.js / popup.js）、PowerShellでの `manifest.json` JSON妥当性は通過。
+  実ブラウザでの動作確認（YouTube/Twitch以外のサイト・chrome://ページでのエラー表示・既存サイトの回帰）は**未実施**。
+- 次の予定: マージ後にブランチは削除済み。実機での動作確認は次の作業者・ユーザーが行うこと。
 
 ### feature/faster-whisper-local — 担当: Claude Code（完了・developへマージ済み）
 - 役割: 認識エンジンにローカル Faster-Whisper（HTTPサーバー方式・GPU前提）を追加する。
@@ -24,9 +33,10 @@
 - 次の予定: 追加作業なし。マージ後にブランチは削除。
 
 ### develop — 統合用（共有）
-- バージョンは `extension/manifest.json` の `version` で管理。現在 **0.3.0**
-  （`feature/faster-whisper-local` マージ済み）。
-- 直近: ローカル Faster-Whisper 認識エンジン対応を開発版 `v0.3.0` としてリリース準備完了。
+- バージョンは `extension/manifest.json` の `version` で管理。現在 **0.3.2**
+  （`feature/faster-whisper-local`、`feature/all-sites-support` マージ済み）。
+- 直近: タブ音声取得の対象サイト制限を撤廃し全サイト対応（v0.3.2）。
+  実ブラウザでの動作確認はまだのため、リリース前に要実施。
 
 ### master — 本番。直接作業しない。
 
@@ -34,6 +44,14 @@
 
 ## 申し送り（時系列・新しい順）
 
+- **2026-07-09 Claude Code**: `feature/all-sites-support` を作成。ユーザーから「タブ音声を拾う仕組みなら
+  YouTube/Twitch以外でも使えるのでは」と指摘を受け、対象サイト制限を撤廃する実装を実施。
+  `manifest.json`（content_scripts/host_permissions）、`background.js`（URL判定）、popup・READMEの文言を修正。
+  実機での動作確認はまだのため、次の作業者（またはユーザー）は実ブラウザでYouTube/Twitch以外のサイトでの
+  動作、`chrome://`ページでのエラー表示、既存サイトでの回帰がないことを確認してください。
+- **2026-07-05 Codex**: ハルシネーション判定が多いというフィードバックを受け、
+  `isLikelyHallucination()` を緩和。1文字などの短文全般と「ありがとうございました」単体は破棄対象から外し、
+  無音時に出やすい既知の定型文中心に絞った。`node --check extension/src/transcription/transcriber.js` 通過。
 - **2026-07-05 Codex**: `develop` とタグ `v0.3.0` を GitHub `origin` へ push 済み。
   GitHub CLI を再認証し、GitHub Release `v0.3.0` を作成完了。prerelease は解除し、Latest として明示指定済み。
   `stream-speech-layer-v0.3.0.zip` / `stream-speech-layer-uv-faster-whisper-v0.3.0.zip` を添付済み。

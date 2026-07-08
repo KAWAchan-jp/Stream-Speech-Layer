@@ -4,9 +4,9 @@
 
 > 配信の「声」を、その場で字幕に。
 
-YouTube / Twitch の配信タブ音声をリアルタイムに文字起こし・翻訳し、配信画面へそのまま字幕を重ねて表示する Chrome / Brave 向け Chromium 拡張です。ログ保存にも対応し、あとから見返せます。
+音声が再生されているタブをリアルタイムに文字起こし・翻訳し、その場に字幕を重ねて表示する Chrome / Brave 向け Chromium 拡張です。YouTube / Twitch に限らずどのサイトでも使えます。ログ保存にも対応し、あとから見返せます。
 
-![version](https://img.shields.io/badge/version-0.3.0-1565c0)
+![version](https://img.shields.io/badge/version-0.3.2-1565c0)
 ![platform](https://img.shields.io/badge/platform-Chrome%20%7C%20Brave-4c8bf5)
 ![manifest](https://img.shields.io/badge/Manifest-v3-f59e0b)
 ![status](https://img.shields.io/badge/status-開発版-9a3412)
@@ -24,7 +24,7 @@ YouTube / Twitch の配信タブ音声をリアルタイムに文字起こし・
 ## こんな人におすすめ
 
 - 海外配信の音声を日本語字幕で理解したい
-- YouTube / Twitch 配信にリアルタイム字幕を付けたい
+- YouTube / Twitch に限らず、音声のあるページにリアルタイム字幕を付けたい
 - 配信で話された内容を文字として記録しておきたい
 - 追加費用をかけず、無料枠で音声翻訳字幕を試したい
 
@@ -36,8 +36,14 @@ YouTube / Twitch の配信タブ音声をリアルタイムに文字起こし・
 
 ## 対象サイト
 
+音声が再生されるタブであれば、基本的にどのサイトでも使用できます（`chrome://` ページや拡張機能ストアなど、ブラウザが拡張機能の実行を許可していないページを除く）。特に動作確認済みなのは以下です。
+
 - YouTube / YouTube Live
 - Twitch
+
+## 権限について
+
+すべてのサイトで字幕オーバーレイを表示できるようにするため、拡張機能はすべての Web サイトへのアクセス権限を要求します（インストール時に「すべての Web サイトのデータの読み取りと変更」という警告が表示されます）。実際にタブ音声を取得するのは、ユーザーが popup で明示的に「開始する」を押したタブのみです。
 
 ## インストール
 
@@ -50,7 +56,7 @@ YouTube / Twitch の配信タブ音声をリアルタイムに文字起こし・
 
 ## 使い方
 
-1. YouTube または Twitch の配信ページを開く
+1. 音声を再生したいページを開く（YouTube・Twitch に限りません）
 2. ツールバーの拡張アイコンをクリックして popup を開く
 3. popup 右上の ⚙ ボタンから設定ページを開き、認識エンジン・配信音声の言語・翻訳・API キーを設定する
 4. popup に戻り「開始する」を押す
@@ -92,7 +98,7 @@ YouTube / Twitch の配信タブ音声をリアルタイムに文字起こし・
 
 ## 実装済み機能
 
-- 現在の YouTube / Twitch タブ音声の取得
+- 現在のタブ音声の取得（サイトを問わず対応）
 - タブ音声の再出力
 - MediaRecorder による音声チャンク化
 - Groq Whisper API / Google AI Studio (Gemini API) / ローカル Faster-Whisper サーバーによる音声認識
