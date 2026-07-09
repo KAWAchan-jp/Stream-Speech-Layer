@@ -6,7 +6,7 @@
 
 音声が再生されているタブをリアルタイムに文字起こし・翻訳し、その場に字幕を重ねて表示する Chrome / Brave 向け Chromium 拡張です。YouTube / Twitch に限らずどのサイトでも使えます。ログ保存にも対応し、あとから見返せます。
 
-![version](https://img.shields.io/badge/version-0.3.2-1565c0)
+![version](https://img.shields.io/badge/version-0.3.7-1565c0)
 ![platform](https://img.shields.io/badge/platform-Chrome%20%7C%20Brave-4c8bf5)
 ![manifest](https://img.shields.io/badge/Manifest-v3-f59e0b)
 ![status](https://img.shields.io/badge/status-開発版-9a3412)
@@ -36,10 +36,7 @@
 
 ## 対象サイト
 
-音声が再生されるタブであれば、基本的にどのサイトでも使用できます（`chrome://` ページや拡張機能ストアなど、ブラウザが拡張機能の実行を許可していないページを除く）。特に動作確認済みなのは以下です。
-
-- YouTube / YouTube Live
-- Twitch
+音声が再生されるタブであれば、YouTube・Twitch に限らずどのサイトでも使用できます（`chrome://` ページや拡張機能ストアなど、ブラウザが拡張機能の実行を許可していないページを除く）。
 
 ## 権限について
 

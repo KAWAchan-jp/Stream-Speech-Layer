@@ -6,7 +6,7 @@
 
 A Chromium extension for Chrome / Brave that transcribes and translates the audio of any tab in real time, and overlays the subtitles directly onto the page. Works on any site, not just YouTube / Twitch. It also saves a log so you can look back later.
 
-![version](https://img.shields.io/badge/version-0.3.2-1565c0)
+![version](https://img.shields.io/badge/version-0.3.7-1565c0)
 ![platform](https://img.shields.io/badge/platform-Chrome%20%7C%20Brave-4c8bf5)
 ![manifest](https://img.shields.io/badge/Manifest-v3-f59e0b)
 ![status](https://img.shields.io/badge/status-development-9a3412)
@@ -36,10 +36,7 @@ A Chromium extension for Chrome / Brave that transcribes and translates the audi
 
 ## Target sites
 
-Works on essentially any site where a tab plays audio (except pages the browser doesn't allow extensions to run on, such as `chrome://` pages or extension stores). Verified in particular on:
-
-- YouTube / YouTube Live
-- Twitch
+Works on essentially any site where a tab plays audio, not just YouTube or Twitch (except pages the browser doesn't allow extensions to run on, such as `chrome://` pages or extension stores).
 
 ## About permissions
 

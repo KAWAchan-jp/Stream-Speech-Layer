@@ -9,7 +9,7 @@
   `docs/feature-<ブランチ名>.md` に残す運用（`CLAUDE.md` 参照）。ここには要点とリンクだけを書く
 - リリースでZIPファイルを添付した場合は、ファイル名だけでなく各ZIPが何か（拡張機能本体／
   Faster-Whisperローカルサーバーなど任意コンポーネント）を一言添える
-- 最終更新: 2026-07-09 / by Claude Code（v0.3.7 リリース完了）
+- 最終更新: 2026-07-09 / by Claude Code（README.md/README.en.mdのドキュメント修正）
 
 ---
 
@@ -117,6 +117,11 @@
 
 ## 申し送り（時系列・新しい順）
 
+- **2026-07-09 Claude Code**: ユーザーから「READMEの『対象サイト』節がYouTube/Twitch限定だった頃の
+  記載のままで実態に合わない」との指摘を受け、`README.md`/`README.en.md`を修正。
+  「特に動作確認済みなのは以下です。YouTube / YouTube Live, Twitch」という古い記載を削除し、
+  全サイト対応である旨のみを残す文面にした。あわせて両ファイルのバージョンバッジを
+  `0.3.2`→`0.3.7`（現行バージョン）に更新。ブランチは切らず`develop`で直接作業。
 - **2026-07-09 Claude Code**: ユーザーの指示で `fix/clear-overlay-on-start` を含む4件（stale-session-lockout、
   hallucination-repeat-filter、対応言語追加、clear-overlay-on-start）をまとめて `v0.3.7` として
   GitHub Releaseに公開（Latest指定、prerelease解除）。`develop`をリモートへpush、タグ`v0.3.7`をpush、
